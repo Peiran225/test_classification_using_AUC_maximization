@@ -1,0 +1,9 @@
+pad token id is none
+finishing tokeninzing
+trainable params: 16,896 || all params: 124,458,240 || trainable%: 0.013575637900712721
+{'loss': 9.5944, 'learning_rate': 0.5, 'epoch': 0.24}
+{'loss': 4.5867, 'learning_rate': 0.5, 'epoch': 0.48}
+{'loss': 4.8368, 'learning_rate': 0.5, 'epoch': 0.71}
+{'loss': 4.3348, 'learning_rate': 0.5, 'epoch': 0.95}
+{'eval_loss': 0.871485710144043, 'eval_accuracy': 0.4908256880733945, 'eval_runtime': 2.1498, 'eval_samples_per_second': 405.624, 'eval_steps_per_second': 13.025, 'epoch': 1.0}
+{'train_runtime': 371.7838, 'train_samples_per_second': 181.151, 'train_steps_per_second': 5.662, 'train_loss': 5.685151900701455, 'epoch': 1.0}
