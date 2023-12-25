@@ -123,6 +123,9 @@ def main(args,logger):
         compute_metrics=compute_metrics
     )
 
+    output = trainer.train()
+    output.train_loss
+
     
 
     

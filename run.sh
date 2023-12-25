@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=constrained_prompting_job  # Specify a name for your job
-#SBATCH --output=p_tuning_main_output.log       # Specify the output log file
-#SBATCH --error=p_tuning_main_errors.log         # Specify the error log file
+#SBATCH --output=AUC_p_tuning_main_output.log       # Specify the output log file
+#SBATCH --error=AUC_p_tuning_main_errors.log         # Specify the error log file
 # Specify the partition (queue) you want to use
 #SBATCH --nodes=1                 # Number of nodes to request
 #SBATCH --ntasks-per-node=1       # Number of tasks (CPUs) to request
