@@ -12,5 +12,6 @@
   "revision": null,
   "task_type": "SEQ_CLS",
   "token_dim": 768,
+  "tokenizer_kwargs": null,
   "tokenizer_name_or_path": "gpt2"
 }

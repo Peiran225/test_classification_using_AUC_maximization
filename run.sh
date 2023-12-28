@@ -15,7 +15,7 @@
 # Example: module load anaconda/3.8.3
 
 # Navigate to the directory containing your Python code
-cd /fs/nexus-scratch/peiran/test_classification_using_AUC_maximization
+cd /nfshomes/qhe123/AUC
 
 # Activate your base environment (replace "your_base_env" with the name of your environment)
 #conda init bash
