@@ -1,5 +1,5 @@
 {
-  "best_metric": 12727.7646484375,
+  "best_metric": 135.37513732910156,
   "best_model_checkpoint": "your-name/gpt2-peft-p-tuning/checkpoint-2105",
   "epoch": 1.0,
   "eval_steps": 500,
@@ -11,44 +11,42 @@
     {
       "epoch": 0.24,
       "learning_rate": 0.001,
-      "loss": 0.7491,
+      "loss": 0.7275,
       "step": 500
     },
     {
       "epoch": 0.48,
       "learning_rate": 0.001,
-      "loss": 0.7035,
+      "loss": 0.6961,
       "step": 1000
     },
     {
       "epoch": 0.71,
       "learning_rate": 0.001,
-      "loss": 0.6967,
+      "loss": 0.6905,
       "step": 1500
     },
     {
       "epoch": 0.95,
       "learning_rate": 0.001,
-      "loss": 0.6901,
+      "loss": 0.6885,
       "step": 2000
     },
     {
       "epoch": 1.0,
-      "eval_accuracy": 0.5321100917431193,
-      "eval_loss": 12727.7646484375,
-      "eval_runtime": 2.2576,
-      "eval_samples_per_second": 386.248,
-      "eval_steps_per_second": 12.402,
+      "eval_accuracy": 0.5103211009174312,
+      "eval_loss": 135.37513732910156,
+      "eval_runtime": 2.3051,
+      "eval_samples_per_second": 378.296,
+      "eval_steps_per_second": 12.147,
       "step": 2105
     }
   ],
   "logging_steps": 500,
   "max_steps": 2105,
-  "num_input_tokens_seen": 0,
   "num_train_epochs": 1,
   "save_steps": 500,
   "total_flos": 2197621476157050.0,
-  "train_batch_size": 32,
   "trial_name": null,
   "trial_params": null
 }

@@ -1,0 +1,34 @@
+{
+  "best_metric": NaN,
+  "best_model_checkpoint": "your-name/gpt2-peft-p-tuning/checkpoint-500",
+  "epoch": 0.2375296912114014,
+  "eval_steps": 500,
+  "global_step": 500,
+  "is_hyper_param_search": false,
+  "is_local_process_zero": true,
+  "is_world_process_zero": true,
+  "log_history": [
+    {
+      "epoch": 0.24,
+      "learning_rate": 0.001,
+      "loss": 2.1300222240001422e+30,
+      "step": 500
+    },
+    {
+      "epoch": 0.24,
+      "eval_accuracy": 0.4908256880733945,
+      "eval_loss": NaN,
+      "eval_runtime": 2.0602,
+      "eval_samples_per_second": 423.253,
+      "eval_steps_per_second": 13.591,
+      "step": 500
+    }
+  ],
+  "logging_steps": 500,
+  "max_steps": 2105,
+  "num_train_epochs": 1,
+  "save_steps": 500,
+  "total_flos": 523239879153600.0,
+  "trial_name": null,
+  "trial_params": null
+}

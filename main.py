@@ -27,6 +27,12 @@ from transformers import GPT2LMHeadModel,GPT2Config
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
 from torch.nn import CrossEntropyLoss
 
+from transformers import TrainerCallback
+
+class PrintStepCallback(TrainerCallback):
+    def on_step_end(self, args, state, control, **kwargs):
+        print(f"Current step number: {state.global_step}")
+
 def p_of_positive(dataset):
 
     import pandas as pd
@@ -74,7 +80,7 @@ class AUCModel(AutoModelForSequenceClassification):
 from torch.optim import SGD
 
 class AUCTrainer(Trainer):
-    def __init__(self, *args, p=0.5, lambda_reg=1e-3, alpha_lr=1e-3, other_lr=5e-5, **kwargs):
+    def __init__(self, *args, p=0.5, lambda_reg=1e-3, alpha_lr=0, other_lr=1e-3, **kwargs):
         super().__init__(*args, **kwargs)
         self.p = p  # Store the value of 'p'
         self.lambda_reg = lambda_reg  # Regularization constant
@@ -101,37 +107,34 @@ class AUCTrainer(Trainer):
         positive_indices = labels == 1
         positive_logits = logits[positive_indices]
         a_expanded = model.a.expand_as(positive_logits)
-        positive_loss = torch.sum((positive_logits - a_expanded) ** 2) * (1 - self.p)
+        positive_loss = torch.sum((positive_logits - a_expanded) ** 2 - 2 * (1 + model.alpha) * positive_logits) * (1 - self.p)
 
         # Negative examples
         negative_indices = labels == 0
         negative_logits = logits[negative_indices]
         b_expanded = model.b.expand_as(negative_logits)
-        negative_loss = torch.sum((negative_logits - b_expanded) ** 2) * self.p
-
-        # Additional loss component adjusted by alpha
-        alpha_loss = 2 * ((1 + model.alpha) * self.p * negative_logits.numel() -
-                      (1 + model.alpha) * (1 - self.p) * positive_logits.numel())
+        negative_loss = torch.sum((negative_logits - b_expanded) ** 2 + 2 * (1 + model.alpha) * negative_logits) * self.p
 
         # Loss component -p(1-p) * alpha^2
         alpha_squared_loss = -self.p * (1 - self.p) * torch.square(model.alpha)
 
         # L1 Regularization for all parameters except 'a', 'b', and 'alpha'
-        l1_regularization = sum(torch.sum(torch.abs(param)) for name, param in model.named_parameters() if name not in ['a', 'b', 'alpha'])
+        l1_regularization = sum(p.abs().sum() for name, p in model.named_parameters() if p.requires_grad and name not in ['a', 'b', 'alpha'])
         l1_regularization *= self.lambda_reg
         
         # Ensure all loss components are at least 1-dimensional
         positive_loss = positive_loss.view(-1)
         negative_loss = negative_loss.view(-1)
-        alpha_loss = alpha_loss.view(-1)
         alpha_squared_loss = alpha_squared_loss.view(-1)
         l1_regularization = l1_regularization.view(-1)
 
         # Total loss calculation
-        loss = positive_loss + negative_loss + alpha_loss + alpha_squared_loss + l1_regularization
+        loss = positive_loss + negative_loss + alpha_squared_loss + l1_regularization
 
         # Ensure the total loss is a single scalar value
         loss = loss.sum()
+
+        print(f"the loss is: total {loss}, separate {positive_loss.sum()}, {negative_loss.sum()}, {alpha_squared_loss.sum()}, {l1_regularization.sum()}")
 
         return (loss, outputs) if return_outputs else loss
     
@@ -140,18 +143,33 @@ class AUCTrainer(Trainer):
         inputs = self._prepare_inputs(inputs)
 
         # Forward pass
-        outputs = model(**inputs)
-        loss = outputs[0]  
+        # outputs = model(**inputs)
+        # loss = outputs[0]  
+        loss = self.compute_loss(model, inputs)
 
         # Backward pass for all parameters except alpha
         self.optimizer_others.zero_grad()
         loss.backward(retain_graph=True)
+        # loss.backward()
+        print(f"Value of gradients: {model.a.grad}, {model.b.grad}, {model.alpha.grad}, {loss.data}")
+        print(f"Parameters: {model.a.data}, {model.b.data}, {model.alpha.data}\n")
         self.optimizer_others.step()
 
         # Gradient ascent for alpha
-        self.optimizer_alpha.zero_grad()
-        (-loss).backward()  # Negative loss for ascent
-        self.optimizer_alpha.step()
+        # self.optimizer_alpha.zero_grad()
+        # (-loss).backward()  # Negative loss for ascent
+        # self.optimizer_alpha.step()
+
+        loss.backward()
+        print(f"Value of gradients: {model.a.grad}, {model.b.grad}, {model.alpha.grad}, {loss.data}")
+        print(f"Parameters: {model.a.data}, {model.b.data}, {model.alpha.data}\n")
+        total_norm = 0
+        for p in model.parameters():
+            if p.grad is not None:
+                param_norm = p.grad.data.norm(2)
+                total_norm += param_norm.item() ** 2
+        total_norm = total_norm ** 0.5
+        print(f"Total gradient norm: {total_norm}")
 
         return loss.detach()
 
@@ -233,10 +251,11 @@ def main(args,logger):
         per_device_eval_batch_size=32,
         num_train_epochs=1,
         weight_decay=0.01, 
-        evaluation_strategy="epoch",
-        save_strategy="epoch",
+        evaluation_strategy="steps",
+        save_strategy="steps",
         load_best_model_at_end=True,
         lr_scheduler_type="constant",
+        max_grad_norm=1.0
     )
 
 
@@ -248,7 +267,8 @@ def main(args,logger):
         tokenizer=tokenizer,
         data_collator=data_collator,
         compute_metrics=compute_metrics,
-        p=positive
+        p=positive,
+        callbacks=[PrintStepCallback()]
     )
 
     trainer.train()
