@@ -1,6 +1,6 @@
 {
-  "best_metric": NaN,
-  "best_model_checkpoint": "your-name/gpt2-peft-p-tuning/checkpoint-500",
+  "best_metric": 0.9598835110664368,
+  "best_model_checkpoint": "your-name/gpt2-peft-p-tuning/checkpoint-1000",
   "epoch": 0.4750593824228028,
   "eval_steps": 500,
   "global_step": 1000,
@@ -11,31 +11,31 @@
     {
       "epoch": 0.24,
       "learning_rate": 0.001,
-      "loss": 2.1300222240001422e+30,
+      "loss": 12.2793,
       "step": 500
     },
     {
       "epoch": 0.24,
-      "eval_accuracy": 0.4908256880733945,
-      "eval_loss": NaN,
-      "eval_runtime": 2.0602,
-      "eval_samples_per_second": 423.253,
-      "eval_steps_per_second": 13.591,
+      "eval_accuracy": 0.49655963302752293,
+      "eval_loss": 1.4855915307998657,
+      "eval_runtime": 2.1694,
+      "eval_samples_per_second": 401.962,
+      "eval_steps_per_second": 12.907,
       "step": 500
     },
     {
       "epoch": 0.48,
       "learning_rate": 0.001,
-      "loss": 0.0,
+      "loss": 5.6549,
       "step": 1000
     },
     {
       "epoch": 0.48,
-      "eval_accuracy": 0.4908256880733945,
-      "eval_loss": NaN,
-      "eval_runtime": 1.9902,
-      "eval_samples_per_second": 438.138,
-      "eval_steps_per_second": 14.069,
+      "eval_accuracy": 0.5034403669724771,
+      "eval_loss": 0.9598835110664368,
+      "eval_runtime": 2.1268,
+      "eval_samples_per_second": 410.003,
+      "eval_steps_per_second": 13.165,
       "step": 1000
     }
   ],
