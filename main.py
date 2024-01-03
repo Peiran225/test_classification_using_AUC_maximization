@@ -174,8 +174,7 @@ class AUCModel(AutoModelForSequenceClassification):
 from torch.optim import SGD
 
 class AUCTrainer(Trainer):
-<<<<<<< HEAD
->>>>>>> ad40d56 (previous version)
+    def __init__(self, *args, p=0.5, lambda_reg=1e-5, alpha_lr=1e-3, other_lr=1e-4, **kwargs):
         super().__init__(*args, **kwargs)
         self.p = p  # Store the value of 'p'
         self.lambda_reg = lambda_reg  # Regularization constant
