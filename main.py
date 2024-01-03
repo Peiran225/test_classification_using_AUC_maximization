@@ -196,23 +196,26 @@ class AUCTrainer(Trainer):
         labels = inputs.pop("labels")
         outputs = model(**inputs)
         logits = outputs.logits
+        logits = torch.nn.functional.softmax(logits, dim=-1)
+        # print(logits)
 
         # compute AUC
-        # probabilities = torch.nn.functional.softmax(logits, dim=-1)
-        # positive_probs = probabilities[:, 1].numpy()
-        # labels_np = labels.numpy() if isinstance(labels, torch.Tensor) else labels
-        # auc = roc_auc_score(labels_np, positive_probs)
-        # print(f"AUC: {auc}")
+        probabilities_cpu = logits.detach().cpu()
+        labels_cpu = labels.cpu() if labels.is_cuda else labels
+        positive_probs = probabilities_cpu[:, 1].numpy()
+        labels_np = labels_cpu.numpy()
+        auc = roc_auc_score(labels_np, positive_probs)
+        print(f"AUC: {auc}")
 
         # Positive examples
         positive_indices = labels == 1
-        positive_logits = logits[positive_indices]
+        positive_logits = logits[positive_indices][:,1]
         a_expanded = model.a.expand_as(positive_logits)
         positive_loss = torch.sum((positive_logits - a_expanded) ** 2 - 2 * (1 + model.alpha) * positive_logits) * (1 - self.p)
 
         # Negative examples
         negative_indices = labels == 0
-        negative_logits = logits[negative_indices]
+        negative_logits = logits[negative_indices][:,1]
         b_expanded = model.b.expand_as(negative_logits)
         negative_loss = torch.sum((negative_logits - b_expanded) ** 2 + 2 * (1 + model.alpha) * negative_logits) * self.p
 
@@ -574,13 +577,13 @@ class AUCTrainer(Trainer):
                     # for name, param in model.named_parameters():
                     #     if name in ['base_model.a', 'base_model.b', 'base_model.alpha']:
                     #         print(f"{name} value:{param.data.item()}, gradient: {param.grad.item()}")
-                    # total_norm = 0
-                    # for p in model.parameters():
-                    #     if p.grad is not None:
-                    #         param_norm = p.grad.data.norm(2)
-                    #         total_norm += param_norm.item() ** 2
-                    # total_norm = total_norm ** 0.5
-                    # print(f"Total gradient norm: {total_norm}")
+                    total_norm = 0
+                    for p in model.parameters():
+                        if p.grad is not None:
+                            param_norm = p.grad.data.norm(2)
+                            total_norm += param_norm.item() ** 2
+                    total_norm = total_norm ** 0.5
+                    print(f"Total gradient norm: {total_norm}")
                     # print(f"current loss: {loss.data}")
                     tr_loss_step = loss.detach()
 
@@ -661,14 +664,14 @@ class AUCTrainer(Trainer):
                         scale_after = self.scaler.get_scale()
                         optimizer_was_run = scale_before <= scale_after
                     else:
-                        for name, param in model.named_parameters():
-                            if name in ['base_model.a', 'base_model.b', 'base_model.alpha']:
-                                print(f"{name} value:{param.data.item()}, gradient: {param.grad.item()}")
+                        # for name, param in model.named_parameters():
+                        #     if name in ['base_model.a', 'base_model.b', 'base_model.alpha']:
+                        #         print(f"{name} value:{param.data.item()}, gradient: {param.grad.item()}")
                         self.optimizer_others.step()
                         for param in [model.alpha]:
                             param.grad *= -1
                         self.optimizer_alpha.step()
-                        # print(f"current loss: {loss.data}")
+                        print(f"current loss: {loss.data}")
                         optimizer_was_run = not self.accelerator.optimizer_step_was_skipped
 
                     if optimizer_was_run:
