@@ -175,10 +175,7 @@ from torch.optim import SGD
 
 class AUCTrainer(Trainer):
 <<<<<<< HEAD
-    def __init__(self, *args, p=0.5, lambda_reg=1e-5, alpha_lr=1e-3, other_lr=1e-4, **kwargs):
-=======
-    def __init__(self, *args, p=0.5, lambda_reg=1e-3, alpha_lr=1e-3, other_lr=1e-3, **kwargs):
->>>>>>> a0609f3 (Your commit message)
+>>>>>>> ad40d56 (previous version)
         super().__init__(*args, **kwargs)
         self.p = p  # Store the value of 'p'
         self.lambda_reg = lambda_reg  # Regularization constant
