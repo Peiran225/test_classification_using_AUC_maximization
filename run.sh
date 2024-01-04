@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=constrained_prompting_job  # Specify a name for your job
+#SBATCH --job-name=AUC_prompting_job  # Specify a name for your job
 #SBATCH --output=AUC_p_tuning_main_output.log       # Specify the output log file
 #SBATCH --error=AUC_p_tuning_main_errors.log         # Specify the error log file
 # Specify the partition (queue) you want to use
@@ -15,11 +15,11 @@
 # Example: module load anaconda/3.8.3
 
 # Navigate to the directory containing your Python code
-cd /nfshomes/qhe123/AUC
+# cd /nfshomes/qhe123/AUC
 
 # Activate your base environment (replace "your_base_env" with the name of your environment)
-#conda init bash
-#conda activate prompting
+# conda init bash
+# conda activate prompting
 
 # Execute your Python code
 python3 main.py

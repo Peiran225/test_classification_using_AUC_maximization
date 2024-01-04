@@ -1,5 +1,5 @@
 {
-  "best_metric": 0.02557622827589512,
+  "best_metric": 0.013190916739404202,
   "best_model_checkpoint": "your-name/gpt2-peft-p-tuning/checkpoint-1500",
   "epoch": 0.9501187648456056,
   "eval_steps": 500,
@@ -11,61 +11,61 @@
     {
       "epoch": 0.24,
       "learning_rate": 0.001,
-      "loss": 0.5735,
+      "loss": 0.3287,
       "step": 500
     },
     {
       "epoch": 0.24,
       "eval_accuracy": 0.4908256880733945,
-      "eval_loss": 0.05957102030515671,
-      "eval_runtime": 2.1604,
-      "eval_samples_per_second": 403.635,
-      "eval_steps_per_second": 12.961,
+      "eval_loss": 0.014033416286110878,
+      "eval_runtime": 2.1541,
+      "eval_samples_per_second": 404.816,
+      "eval_steps_per_second": 12.999,
       "step": 500
     },
     {
       "epoch": 0.48,
       "learning_rate": 0.001,
-      "loss": 0.1791,
+      "loss": 0.2366,
       "step": 1000
     },
     {
       "epoch": 0.48,
       "eval_accuracy": 0.4908256880733945,
-      "eval_loss": 0.03574084863066673,
-      "eval_runtime": 2.1468,
-      "eval_samples_per_second": 406.177,
-      "eval_steps_per_second": 13.042,
+      "eval_loss": 0.013540957123041153,
+      "eval_runtime": 2.1535,
+      "eval_samples_per_second": 404.92,
+      "eval_steps_per_second": 13.002,
       "step": 1000
     },
     {
       "epoch": 0.71,
       "learning_rate": 0.001,
-      "loss": 0.1593,
+      "loss": 0.2082,
       "step": 1500
     },
     {
       "epoch": 0.71,
       "eval_accuracy": 0.4908256880733945,
-      "eval_loss": 0.02557622827589512,
-      "eval_runtime": 2.1446,
-      "eval_samples_per_second": 406.606,
-      "eval_steps_per_second": 13.056,
+      "eval_loss": 0.013190916739404202,
+      "eval_runtime": 2.1499,
+      "eval_samples_per_second": 405.608,
+      "eval_steps_per_second": 13.024,
       "step": 1500
     },
     {
       "epoch": 0.95,
       "learning_rate": 0.001,
-      "loss": 0.1302,
+      "loss": 0.162,
       "step": 2000
     },
     {
       "epoch": 0.95,
       "eval_accuracy": 0.4908256880733945,
-      "eval_loss": 0.026311909779906273,
-      "eval_runtime": 2.1437,
-      "eval_samples_per_second": 406.764,
-      "eval_steps_per_second": 13.061,
+      "eval_loss": 0.013221592642366886,
+      "eval_runtime": 2.1506,
+      "eval_samples_per_second": 405.477,
+      "eval_steps_per_second": 13.02,
       "step": 2000
     }
   ],
