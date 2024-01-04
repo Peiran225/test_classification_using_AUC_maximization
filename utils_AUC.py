@@ -2,12 +2,13 @@ import torch
 import torch.nn as nn
 
 class AUCLOSS(nn.Module):
-	def __init__(self, a, b, w, model):
+	def __init__(self, a, b, w, model,device):
 		super(AUCLOSS, self).__init__()
 		self.p = 1 / (1 + 0.2)
-		self.a = a
-		self.b = b
-		self.w = w
+		# self.p = self.p.to(device)
+		self.a = a.to(device)
+		self.b = b.to(device)
+		self.w = w.to(device)
 		self.model = model
 	def forward(self, y_pred, y_true):
 		'''

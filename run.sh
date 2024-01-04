@@ -22,7 +22,7 @@
 # conda activate prompting
 
 # Execute your Python code
-python3 main.py
+python3 main_AUC_trainer.py
 # Deactivate the environment (if you want to)
 # conda deactivate
 

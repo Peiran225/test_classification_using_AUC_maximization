@@ -94,6 +94,7 @@ from packaging import version
 from datasets import load_dataset
 import evaluate
 import torch
+import torch.nn as nn
 import numpy as np
 import argparse
 import logging
@@ -107,7 +108,8 @@ from transformers.debug_utils import DebugOption, DebugUnderflowOverflow
 from torch.nn import CrossEntropyLoss
 from enum import Enum
 from sklearn.metrics import roc_auc_score
-
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
+from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampler
 from transformers import TrainerCallback
 
 from utils_AUC import AUCLOSS
@@ -144,50 +146,51 @@ def p_of_positive(dataset):
 
     return proportion_positive
 
-class AUCModel(AutoModelForSequenceClassification):
-    def __init__(self, config):
-        super().__init__(config)
-        # Additional custom initialization here
-        self.a = torch.nn.Parameter(torch.zeros(1))  # Trainable parameter 'a'
-        self.b = torch.nn.Parameter(torch.zeros(1)) 
-        self.alpha = torch.nn.Parameter(torch.zeros(1))
+# class AUCModel(AutoModelForSequenceClassification):
+#     def __init__(self, config):
+#         super().__init__(config)
+#         # Additional custom initialization here
+#         self.a = torch.nn.Parameter(torch.zeros(1))  # Trainable parameter 'a'
+#         self.b = torch.nn.Parameter(torch.zeros(1)) 
+#         self.alpha = torch.nn.Parameter(torch.zeros(1))
 
-    @classmethod
-    def from_pretrained(cls, model_name_or_path, *model_args, **kwargs):
-        # Load config if not provided
-        config = kwargs.pop('config', None)
-        if config is None:
-            config = AutoConfig.from_pretrained(model_name_or_path, **kwargs)
+#     @classmethod
+#     def from_pretrained(cls, model_name_or_path, *model_args, **kwargs):
+#         # Load config if not provided
+#         config = kwargs.pop('config', None)
+#         if config is None:
+#             config = AutoConfig.from_pretrained(model_name_or_path, **kwargs)
 
-        # Initialize the model
-        model = super().from_pretrained(model_name_or_path, *model_args, config=config, **kwargs)
+#         # Initialize the model
+#         model = super().from_pretrained(model_name_or_path, *model_args, config=config, **kwargs)
 
-        # Add the custom parameter 'a'
-        model.a = torch.nn.Parameter(torch.zeros(1))
-        model.b = torch.nn.Parameter(torch.zeros(1)) 
-        model.alpha = torch.nn.Parameter(torch.zeros(1))
+#         # Add the custom parameter 'a'
+#         model.a = torch.nn.Parameter(torch.zeros(1))
+#         model.b = torch.nn.Parameter(torch.zeros(1)) 
+#         model.alpha = torch.nn.Parameter(torch.zeros(1))
 
-        return model
+#         return model
 
-    def forward(self, **inputs):
-        # Forward pass through the pre-trained model
-        output = model(**inputs)
-        print(output.logits.size(),)
-        output = F.softmax(output.logits,dim=1)
-        loss = criterion(output, labels.view(-1,1).float())
-        return loss
+#     def forward(self, **inputs):
+#         # Forward pass through the pre-trained model
+#         output = model(**inputs)
+#         print(output.logits.size(),)
+#         output = F.softmax(output.logits,dim=1)
+#         loss = criterion(output, labels.view(-1,1).float())
+#         return loss
     
-from torch.optim import SGD
+# from torch.optim import SGD
 
 class AUCTrainer(Trainer):
-    def __init__(self, *args, p=0.5, lambda_reg=1e-5, alpha_lr=1e-3, other_lr=1e-4, **kwargs):
+    def __init__(self, *args, p=0.5, lambda_reg=1e-5, lr=1e-2, lr2=1e-3, **kwargs):
         super().__init__(*args, **kwargs)
         self.p = p  # Store the value of 'p'
         self.lambda_reg = lambda_reg  # Regularization constant
         self.a = torch.nn.Parameter(torch.zeros(1))  # Trainable parameter 'a'
         self.b = torch.nn.Parameter(torch.zeros(1)) 
         self.w = torch.nn.Parameter(torch.zeros(1))
-
+        self.lr = lr
+        self.lr2 = lr2
 
         # Initialize the model here if it's not already initialized
         model = kwargs.get("model")
@@ -197,7 +200,7 @@ class AUCTrainer(Trainer):
         
         
     def compute_loss(self, model, inputs, return_outputs=False):
-        criterion = AUCLOSS(self.a, self.b, self.w, model)
+        criterion = AUCLOSS(self.a, self.b, self.w, model,self.args.device)
         outputs = model(**inputs)
         outputs_softmax = F.softmax(outputs.logits,dim=1)
         labels = inputs['labels']
@@ -481,29 +484,7 @@ class AUCTrainer(Trainer):
                     self.control = self.callback_handler.on_step_begin(args, self.state, self.control)
 
                 with self.accelerator.accumulate(model):
-                    model.train()
-                    inputs = self._prepare_inputs(inputs)
-
-                    # Forward pass
-                    # outputs = model(**inputs)
-                    # loss = outputs[0]  
-                    loss = self.compute_loss(model, inputs)
-
-                    # Backward pass for all parameters except alpha
-                    # self.optimizer_others.zero_grad()
-                    loss.backward()
-                    for p in model.parameters():
-                        if p.grad is not None:
-                            param_norm = p.grad.data.norm(2)
-                            total_norm += param_norm.item() ** 2
-                    total_norm = total_norm ** 0.5
-                    print(f"Total gradient norm: {total_norm}")
-
-                    
-
-
-
-                    tr_loss_step = loss.detach()
+                    tr_loss_step = self.training_step(model, inputs)
 
                 if (
                     args.logging_nan_inf_filter
@@ -588,14 +569,16 @@ class AUCTrainer(Trainer):
                         # Update
                         for i, param in enumerate(model.parameters()):
                             if param.requires_grad:
-                                param.data.add_(param.grad.data, alpha= - args.lr)
+                                param.data.add_(param.grad.data, alpha= - self.lr)
 
                         model.zero_grad()
-                        self.a.data.copy_(self.a.data - args.lr * self.a.grad.data)
-                        self.b.data.copy_(self.b.data - args.lr * self.b.grad.data)
-                        self.w.data.copy_(self.w.data + args.lr2 * self.w.grad.data)
+                        self.a.data.copy_(self.a.data - self.lr * self.a.grad.data)
+                        self.b.data.copy_(self.b.data - self.lr * self.b.grad.data)
+                        self.w.data.copy_(self.w.data + self.lr2 * self.w.grad.data)
                         self.w.data  = torch.clamp(self.w.data, -10, 10)
-                        loss.zero_grad()
+                        self.a.grad.zero_()
+                        self.b.grad.zero_()
+                        self.w.grad.zero_()
                         
                         print(self.a.data, self.b.data, self.w.data)
 
@@ -689,7 +672,63 @@ class AUCTrainer(Trainer):
         self._finish_current_push()
 
         return TrainOutput(self.state.global_step, train_loss, metrics)
+    
+    def training_step(self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]]) -> torch.Tensor:
+        """
+        Perform a training step on a batch of inputs.
 
+        Subclass and override to inject custom behavior.
+
+        Args:
+            model (`nn.Module`):
+                The model to train.
+            inputs (`Dict[str, Union[torch.Tensor, Any]]`):
+                The inputs and targets of the model.
+
+                The dictionary will be unpacked before being fed to the model. Most models expect the targets under the
+                argument `labels`. Check your model's documentation for all accepted arguments.
+
+        Return:
+            `torch.Tensor`: The tensor with training loss on this batch.
+        """
+        model.train()
+        inputs = self._prepare_inputs(inputs)
+        
+        if is_sagemaker_mp_enabled():
+            loss_mb = smp_forward_backward(model, inputs, self.args.gradient_accumulation_steps)
+            return loss_mb.reduce_mean().detach().to(self.args.device)
+        
+        with self.compute_loss_context_manager():
+            loss = self.compute_loss(model, inputs)
+
+        if self.args.n_gpu > 1:
+            loss = loss.mean()  # mean() to average on multi-gpu parallel training
+
+        if self.do_grad_scaling:
+            self.scaler.scale(loss).backward()
+        elif self.use_apex:
+            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                scaled_loss.backward()
+        else:
+            self.accelerator.backward(loss)
+        total_norm = 0
+        loss_return =   loss.detach() / self.args.gradient_accumulation_steps
+        for p in model.parameters():
+            if p.grad is not None:
+                param_norm = p.grad.data.norm(2)
+                total_norm += param_norm.item() ** 2
+        total_norm = total_norm ** 0.5 + self.a.grad.data.norm(2) + self.b.grad.data.norm(2) + self.w.grad.data.norm(2)
+        print(f"Total gradient norm: {total_norm}")
+
+        
+        return torch.tensor(loss_return.item())
+
+
+        
+        
+
+        
+    
     def evaluate(
         self,
         eval_dataset: Optional[Dataset] = None,
@@ -708,7 +747,7 @@ class AUCTrainer(Trainer):
         test_pred = []
         test_true = [] 
         with torch.no_grad():
-            for batch in eval_dataset:
+            for batch in eval_dataloader:
                 input_ids = batch['input_ids']
                 attention_mask = batch['attention_mask']
                 labels = batch['labels']
@@ -784,7 +823,7 @@ def main(args,logger):
 )
 
 
-    model = AUCModel.from_pretrained(model_name_or_path)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name_or_path)
     model = get_peft_model(model, peft_config)
     model.print_trainable_parameters()
 
