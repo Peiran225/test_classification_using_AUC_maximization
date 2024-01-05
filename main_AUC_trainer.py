@@ -204,6 +204,7 @@ class AUCTrainer(Trainer):
         outputs = model(**inputs)
         outputs_softmax = F.softmax(outputs.logits,dim=1)
         labels = inputs['labels']
+        aaa = labels.view(-1,1).float()
         loss = criterion(outputs_softmax, labels.view(-1,1).float())
         return (loss, outputs) if return_outputs else loss
     
@@ -582,7 +583,7 @@ class AUCTrainer(Trainer):
                         
                         print(self.a.data, self.b.data, self.w.data)
 
-                        #evaluate AUC
+                        
 
                         optimizer_was_run = not self.accelerator.optimizer_step_was_skipped
 
@@ -729,40 +730,40 @@ class AUCTrainer(Trainer):
 
         
     
-    def evaluate(
-        self,
-        eval_dataset: Optional[Dataset] = None,
-        ignore_keys: Optional[List[str]] = None,
-        metric_key_prefix: str = "eval",
-    ) -> Dict[str, float]:
-        # memory metrics - must set up as early as possible
-        self._memory_tracker.start()
+    # def evaluate(
+    #     self,
+    #     eval_dataset: Optional[Dataset] = None,
+    #     ignore_keys: Optional[List[str]] = None,
+    #     metric_key_prefix: str = "eval",
+    # ) -> Dict[str, float]:
+    #     # memory metrics - must set up as early as possible
+    #     self._memory_tracker.start()
 
-        eval_dataloader = self.get_eval_dataloader(eval_dataset)
-        start_time = time.time()
+    #     eval_dataloader = self.get_eval_dataloader(eval_dataset)
+    #     start_time = time.time()
 
 
-        self.model.eval()
-        #### testing  #######
-        test_pred = []
-        test_true = [] 
-        with torch.no_grad():
-            for batch in eval_dataloader:
-                input_ids = batch['input_ids']
-                attention_mask = batch['attention_mask']
-                labels = batch['labels']
+    #     self.model.eval()
+    #     #### testing  #######
+    #     test_pred = []
+    #     test_true = [] 
+    #     with torch.no_grad():
+    #         for batch in eval_dataloader:
+    #             input_ids = batch['input_ids']
+    #             attention_mask = batch['attention_mask']
+    #             labels = batch['labels'].cpu()
 
-                y_pred = self.model(**batch).logits
-                y_pred = F.softmax(y_pred, dim=1)
-                test_pred.append(y_pred[:,1].cpu().detach().numpy())
-                test_true.append(labels.numpy())
+    #             y_pred = self.model(**batch).logits
+    #             y_pred = F.softmax(y_pred, dim=1)
+    #             test_pred.append(y_pred[:,1].cpu().detach().numpy())
+    #             test_true.append(labels.numpy())
 
-        test_true = np.concatenate(test_true)
-        test_pred = np.concatenate(test_pred)
-        val_auc =  roc_auc_score(test_true, test_pred) 
-        print(f'current auc: {val_auc}')
+    #     test_true = np.concatenate(test_true)
+    #     test_pred = np.concatenate(test_pred)
+    #     val_auc =  roc_auc_score(test_true, test_pred) 
+    #     print(f'current auc: {val_auc}')
 
-        return val_auc
+    #     return val_auc
 
 
 
@@ -773,11 +774,18 @@ def main(args,logger):
     dataset = load_dataset("sst2")
     positive = p_of_positive(dataset)
 
-    metric = evaluate.load("accuracy")
+    metric = evaluate.load('roc_auc') #("accuracy")
     def compute_metrics(eval_pred):
         predictions, labels = eval_pred
-        predictions = np.argmax(predictions, axis=1)
-        return metric.compute(predictions=predictions, references=labels)
+        predictions_tensor = torch.tensor(predictions)
+        predictions_tensor = F.softmax(predictions_tensor,dim=1)
+        predictions_numpy = predictions_tensor.numpy()
+        prediction_scores = np.array(predictions_numpy, dtype='float32')
+
+        
+        return metric.compute(prediction_scores=prediction_scores[:,1], references=labels)
+
+    
 
 
     if any(k in model_name_or_path for k in ("gpt", "opt", "bloom")):
@@ -861,6 +869,9 @@ def main(args,logger):
         p=positive,
         callbacks=[PrintStepCallback()]
     )
+
+    eval = trainer.evaluate(eval_dataset=tokenized_datasets["validation"])
+    print("AUC of projected soft prompt before train\n %s"% eval)
 
     trainer.train()
     
