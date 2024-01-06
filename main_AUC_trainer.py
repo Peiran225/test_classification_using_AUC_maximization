@@ -114,6 +114,7 @@ from transformers import TrainerCallback
 
 from utils_AUC import AUCLOSS
 import torch.nn.functional as F
+from adamw_minimax import adamw_minimax
 
 class PrintStepCallback(TrainerCallback):
     def on_step_end(self, args, state, control, **kwargs):
@@ -146,51 +147,21 @@ def p_of_positive(dataset):
 
     return proportion_positive
 
-# class AUCModel(AutoModelForSequenceClassification):
-#     def __init__(self, config):
-#         super().__init__(config)
-#         # Additional custom initialization here
-#         self.a = torch.nn.Parameter(torch.zeros(1))  # Trainable parameter 'a'
-#         self.b = torch.nn.Parameter(torch.zeros(1)) 
-#         self.alpha = torch.nn.Parameter(torch.zeros(1))
 
-#     @classmethod
-#     def from_pretrained(cls, model_name_or_path, *model_args, **kwargs):
-#         # Load config if not provided
-#         config = kwargs.pop('config', None)
-#         if config is None:
-#             config = AutoConfig.from_pretrained(model_name_or_path, **kwargs)
-
-#         # Initialize the model
-#         model = super().from_pretrained(model_name_or_path, *model_args, config=config, **kwargs)
-
-#         # Add the custom parameter 'a'
-#         model.a = torch.nn.Parameter(torch.zeros(1))
-#         model.b = torch.nn.Parameter(torch.zeros(1)) 
-#         model.alpha = torch.nn.Parameter(torch.zeros(1))
-
-#         return model
-
-#     def forward(self, **inputs):
-#         # Forward pass through the pre-trained model
-#         output = model(**inputs)
-#         print(output.logits.size(),)
-#         output = F.softmax(output.logits,dim=1)
-#         loss = criterion(output, labels.view(-1,1).float())
-#         return loss
-    
-# from torch.optim import SGD
 
 class AUCTrainer(Trainer):
-    def __init__(self, *args, p=0.5, lambda_reg=1e-5, lr=1e-2, lr2=1e-3, **kwargs):
+    def __init__(self, *args, p=1 / (1 + 0.2), lambda_reg=1, lr=10, lr2=10, **kwargs):
         super().__init__(*args, **kwargs)
         self.p = p  # Store the value of 'p'
         self.lambda_reg = lambda_reg  # Regularization constant
-        self.a = torch.nn.Parameter(torch.zeros(1))  # Trainable parameter 'a'
+        self.a = torch.nn.Parameter(torch.ones(1))# .rand(1))  # Trainable parameter 'a'
         self.b = torch.nn.Parameter(torch.zeros(1)) 
-        self.w = torch.nn.Parameter(torch.zeros(1))
+        self.w = torch.nn.Parameter(torch.rand(1))
         self.lr = lr
         self.lr2 = lr2
+        
+        
+
 
         # Initialize the model here if it's not already initialized
         model = kwargs.get("model")
@@ -200,12 +171,29 @@ class AUCTrainer(Trainer):
         
         
     def compute_loss(self, model, inputs, return_outputs=False):
-        criterion = AUCLOSS(self.a, self.b, self.w, model,self.args.device)
+        # criterion = AUCLOSS(self.a, self.b, self.w, model,self.args.device)
         outputs = model(**inputs)
         outputs_softmax = F.softmax(outputs.logits,dim=1)
-        labels = inputs['labels']
-        aaa = labels.view(-1,1).float()
-        loss = criterion(outputs_softmax, labels.view(-1,1).float())
+        y_pred = outputs_softmax[:,1]
+        labels = inputs['labels'].view(-1,1).float()
+        self.a = self.a.to(self.args.device)
+        self.b = self.b.to(self.args.device)
+        self.w = self.w.to(self.args.device)
+
+        auc_loss = (1 - self.p) * torch.mean((y_pred - self.a)**2 * (1 == labels).float()) + self.p * torch.mean((y_pred - self.b)**2 * (0 == labels).float()) + \
+		2 * (1+ self.w) * ( torch.mean((self.p * y_pred * (0 == labels).float() - (1 - self.p) * y_pred * (1==labels).float()))) - self.p * (1 - self.p) * self.w**2
+		
+        # loss = criterion(outputs_softmax[:,1], labels.view(-1,1).float())
+ 
+        # compute the regularizer
+        L2_norm_square = 0
+        for _, p in model.named_parameters():
+            if p.requires_grad:
+                param_norm = p.data.norm(2)
+                L2_norm_square += param_norm.item() ** 2
+        print("params_L2_norm_square %s in compute_loss function "% L2_norm_square) 
+
+        loss = auc_loss +  self.lambda_reg*L2_norm_square
         return (loss, outputs) if return_outputs else loss
     
     
@@ -568,20 +556,42 @@ class AUCTrainer(Trainer):
                         #     if name in ['base_model.a', 'base_model.b', 'base_model.alpha']:
                         #         print(f"{name} value:{param.data.item()}, gradient: {param.grad.item()}")
                         # Update
-                        for i, param in enumerate(model.parameters()):
-                            if param.requires_grad:
-                                param.data.add_(param.grad.data, alpha= - self.lr)
-
-                        model.zero_grad()
-                        self.a.data.copy_(self.a.data - self.lr * self.a.grad.data)
-                        self.b.data.copy_(self.b.data - self.lr * self.b.grad.data)
-                        self.w.data.copy_(self.w.data + self.lr2 * self.w.grad.data)
-                        self.w.data  = torch.clamp(self.w.data, -10, 10)
-                        self.a.grad.zero_()
-                        self.b.grad.zero_()
-                        self.w.grad.zero_()
                         
-                        print(self.a.data, self.b.data, self.w.data)
+                        total_norm = 0
+                        for _, p in model.named_parameters():
+                            if p.requires_grad:
+                                # p.data.add_(p.grad.data, alpha= - self.lr)
+                                a = p
+                                param_norm = p.grad.data.norm(2)
+                                total_norm += param_norm.item() ** 2
+                                
+
+                        # print("Total params gradient norm square: %s, a norm %s, b norm %s,  w norm %s"% (total_norm,self.a.grad.data.norm(2),self.b.grad.data.norm(2),self.w.grad.data.norm(2)))
+                        print("Total params gradient norm square: %s"% total_norm)
+
+                        # # Separate the alpha parameter
+                        # alpha_param = [p for p in model.parameters() if p.requires_grad and p is model.alpha]
+                        # other_params = [p for p in model.parameters() if p.requires_grad and p is not model.alpha]
+
+                        # # Define two separate optimizers
+                        # self.optimizer_alpha = Adam(alpha_param, lr=alpha_lr, betas=(0.9, 0.999))
+                        # self.optimizer_others = Adam(other_params, lr=other_lr, betas=(0.9, 0.999))
+                        
+                        
+                        self.optimizer.step() 
+                        # model.zero_grad()
+                        # self.a.data.copy_(self.a.data - self.lr * self.a.grad.data)
+                        # self.b.data.copy_(self.b.data - self.lr * self.b.grad.data)
+                        # self.w.data.copy_(self.w.data + self.lr2 * self.w.grad.data)
+                        # self.w.data  = torch.clamp(self.w.data, -10, 10)
+                        # self.a.data  = torch.clamp(self.w.data, 0, 1)
+                        # self.b.data  = torch.clamp(self.w.data, 0, 1)
+                        # self.a.grad.zero_()
+                        # self.b.grad.zero_()
+                        # self.w.grad.zero_()
+                        
+                        
+                        # print("a %s b %s w %s"% (self.a.data, self.b.data, self.w.data))
 
                         
 
@@ -712,58 +722,246 @@ class AUCTrainer(Trainer):
                 scaled_loss.backward()
         else:
             self.accelerator.backward(loss)
-        total_norm = 0
+        # total_norm = 0
+        
+        # for _, p in model.named_parameters():
+        #     if p.requires_grad:
+        #         param_norm = p.grad.data.norm(2)
+        #         total_norm += param_norm.item() ** 2
+        # # total_norm = total_norm ** 0.5 + self.a.grad.data.norm(2) + self.b.grad.data.norm(2) + self.w.grad.data.norm(2)
+        # print("Total params gradient norm square: %s, a norm %s, b norm %s,  w norm %s"% (total_norm,self.a.grad.data.norm(2),self.b.grad.data.norm(2),self.w.grad.data.norm(2)))
+
         loss_return =   loss.detach() / self.args.gradient_accumulation_steps
-        for p in model.parameters():
-            if p.grad is not None:
-                param_norm = p.grad.data.norm(2)
-                total_norm += param_norm.item() ** 2
-        total_norm = total_norm ** 0.5 + self.a.grad.data.norm(2) + self.b.grad.data.norm(2) + self.w.grad.data.norm(2)
-        print(f"Total gradient norm: {total_norm}")
-
-        
         return torch.tensor(loss_return.item())
-
-
-        
-        
-
-        
     
-    # def evaluate(
-    #     self,
-    #     eval_dataset: Optional[Dataset] = None,
-    #     ignore_keys: Optional[List[str]] = None,
-    #     metric_key_prefix: str = "eval",
-    # ) -> Dict[str, float]:
-    #     # memory metrics - must set up as early as possible
-    #     self._memory_tracker.start()
+    def create_scheduler(self, num_training_steps: int, optimizer: None):
+        """
+        Setup the scheduler. The optimizer of the trainer must have been set up either before this method is called or
+        passed as an argument.
 
-    #     eval_dataloader = self.get_eval_dataloader(eval_dataset)
-    #     start_time = time.time()
+        Args:
+            num_training_steps (int): The number of training steps to do.
+        """
+        if self.lr_scheduler is None:
+            self.lr_scheduler = get_scheduler(
+                self.args.lr_scheduler_type,
+                optimizer=self.optimizer if optimizer is None else optimizer,
+                num_warmup_steps=self.args.get_warmup_steps(num_training_steps),
+                num_training_steps=num_training_steps,
+            )
+            self._created_lr_scheduler = True
+        return self.lr_scheduler
+    
+    def get_optimizer_cls_and_kwargs(args: TrainingArguments) -> Tuple[Any, Any]:
+        """
+        Returns the optimizer class and optimizer parameters based on the training arguments.
+
+        Args:
+            args (`transformers.training_args.TrainingArguments`):
+                The training arguments for the training session.
+
+        """
+
+        # parse args.optim_args
+        optim_args = {}
+        if args.optim_args:
+            for mapping in args.optim_args.replace(" ", "").split(","):
+                key, value = mapping.split("=")
+                optim_args[key] = value
+
+        optimizer_kwargs = {"lr": args.learning_rate}
+
+        adam_kwargs = {
+            "betas": (args.adam_beta1, args.adam_beta2),
+            "eps": args.adam_epsilon,
+        }
+        if args.optim == "adamw_minimax":
+            optimizer_kwargs.update(adam_kwargs)
+            optimizer_cls = adamw_minimax
+        elif args.optim == OptimizerNames.ADAFACTOR:
+            optimizer_cls = Adafactor
+            optimizer_kwargs.update({"scale_parameter": False, "relative_step": False})
+        elif args.optim == OptimizerNames.ADAMW_HF:
+            from .optimization import AdamW
+
+            optimizer_cls = AdamW
+            optimizer_kwargs.update(adam_kwargs)
+        elif args.optim in [OptimizerNames.ADAMW_TORCH, OptimizerNames.ADAMW_TORCH_FUSED]:
+            from torch.optim import AdamW
+
+            optimizer_cls = AdamW
+            optimizer_kwargs.update(adam_kwargs)
+            if args.optim == OptimizerNames.ADAMW_TORCH_FUSED:
+                optimizer_kwargs.update({"fused": True})
+        elif args.optim == OptimizerNames.ADAMW_TORCH_XLA:
+            try:
+                from torch_xla.amp.syncfree import AdamW
+
+                optimizer_cls = AdamW
+                optimizer_kwargs.update(adam_kwargs)
+            except ImportError:
+                raise ValueError("Trainer failed to import syncfree AdamW from torch_xla.")
+        elif args.optim == OptimizerNames.ADAMW_APEX_FUSED:
+            try:
+                from apex.optimizers import FusedAdam
+
+                optimizer_cls = FusedAdam
+                optimizer_kwargs.update(adam_kwargs)
+            except ImportError:
+                raise ValueError("Trainer tried to instantiate apex FusedAdam but apex is not installed!")
+        elif args.optim in [
+            OptimizerNames.ADAMW_BNB,
+            OptimizerNames.ADAMW_8BIT,
+            OptimizerNames.PAGED_ADAMW,
+            OptimizerNames.PAGED_ADAMW_8BIT,
+            OptimizerNames.LION,
+            OptimizerNames.LION_8BIT,
+            OptimizerNames.PAGED_LION,
+            OptimizerNames.PAGED_LION_8BIT,
+        ]:
+            try:
+                from bitsandbytes.optim import AdamW, Lion
+
+                is_paged = False
+                optim_bits = 32
+                optimizer_cls = None
+                additional_optim_kwargs = adam_kwargs
+                if "paged" in args.optim:
+                    is_paged = True
+                if "8bit" in args.optim:
+                    optim_bits = 8
+                if "adam" in args.optim:
+                    optimizer_cls = AdamW
+                elif "lion" in args.optim:
+                    optimizer_cls = Lion
+                    additional_optim_kwargs = {"betas": (args.adam_beta1, args.adam_beta2)}
+
+                bnb_kwargs = {"is_paged": is_paged, "optim_bits": optim_bits}
+                optimizer_kwargs.update(additional_optim_kwargs)
+                optimizer_kwargs.update(bnb_kwargs)
+            except ImportError:
+                raise ValueError("Trainer tried to instantiate bnb optimizer but bnb is not installed!")
+            if is_bitsandbytes_available() and version.parse(
+                importlib.metadata.version("bitsandbytes")
+            ) < version.parse("0.41.1"):
+                logger.warning(
+                    "You are using 8-bit optimizers with a version of `bitsandbytes` < 0.41.1. "
+                    "It is recommended to update your version as a major bug has been fixed in 8-bit optimizers."
+                )
+        elif args.optim == OptimizerNames.ADAMW_ANYPRECISION:
+            try:
+                from torchdistx.optimizers import AnyPrecisionAdamW
+
+                optimizer_cls = AnyPrecisionAdamW
+                optimizer_kwargs.update(adam_kwargs)
+
+                # TODO Change dtypes back to M=FP32, Var = BF16, Kahan = False once they can be cast together in torchdistx.
+                optimizer_kwargs.update(
+                    {
+                        "use_kahan_summation": strtobool(optim_args.get("use_kahan_summation", "False")),
+                        "momentum_dtype": getattr(torch, optim_args.get("momentum_dtype", "float32")),
+                        "variance_dtype": getattr(torch, optim_args.get("variance_dtype", "float32")),
+                        "compensation_buffer_dtype": getattr(
+                            torch, optim_args.get("compensation_buffer_dtype", "bfloat16")
+                        ),
+                    }
+                )
+            except ImportError:
+                raise ValueError("Please install https://github.com/pytorch/torchdistx")
+        elif args.optim == OptimizerNames.SGD:
+            optimizer_cls = torch.optim.SGD
+        elif args.optim == OptimizerNames.ADAGRAD:
+            optimizer_cls = torch.optim.Adagrad
+        else:
+            raise ValueError(f"Trainer cannot instantiate unsupported optimizer: {args.optim}")
+        return optimizer_cls, optimizer_kwargs
+
+    def create_optimizer(self):
+        """
+        Setup the optimizer.
+
+        We provide a reasonable default that works well. If you want to use something else, you can pass a tuple in the
+        Trainer's init through `optimizers`, or subclass and override this method in a subclass.
+        """
+        opt_model = self.model_wrapped if is_sagemaker_mp_enabled() else self.model
+
+        if self.optimizer is None:
+            decay_parameters = get_parameter_names(opt_model, ALL_LAYERNORM_LAYERS)
+            decay_parameters = [name for name in decay_parameters if "bias" not in name]
+            optimizer_grouped_parameters = [
+                {
+                    "params": [
+                        p for n, p in opt_model.named_parameters() if (n in decay_parameters and p.requires_grad)
+                    ],
+                    "weight_decay": self.args.weight_decay,
+                    "lr": self.args.learning_rate,
+                    "betas": (args.adam_beta1, args.adam_beta2),
+                    "eps": args.adam_epsilon,
+                },
+                {
+                    "params": [
+                        p for n, p in opt_model.named_parameters() if (n not in decay_parameters and p.requires_grad)
+                    ],
+                    "weight_decay": 0.0,
+                    "lr": self.args.learning_rate,
+                    "betas": (args.adam_beta1, args.adam_beta2),
+                    "eps": args.adam_epsilon,
+                },
+                {
+                    "params": [
+                        self.a, self.b
+                    ],
+                    "weight_decay": self.args.weight_decay,
+                    "lr": self.args.learning_rate,
+                    "betas": (args.adam_beta1, args.adam_beta2),
+                    "eps": args.adam_epsilon,
+                },
+                {
+                    "params": [
+                        self.w
+                    ],
+                    "weight_decay": self.args.weight_decay,
+                    "lr":  - self.args.learning_rate,
+                    "betas": (args.adam_beta1, args.adam_beta2),
+                    "eps": args.adam_epsilon,
+                },
+            ]
+
+            optimizer_cls, optimizer_kwargs = Trainer.get_optimizer_cls_and_kwargs(self.args)
+
+            if self.sharded_ddp == ShardedDDPOption.SIMPLE:
+                self.optimizer = OSS(
+                    params=optimizer_grouped_parameters,
+                    optim=optimizer_cls,
+                    **optimizer_kwargs,
+                )
+            elif self.args.optim == "adamw_minimax":
+                self.optimizer = optimizer_cls(optimizer_grouped_parameters)
+            else:
+                self.optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
+                if optimizer_cls.__name__ == "Adam8bit":
+                    import bitsandbytes
+
+                    manager = bitsandbytes.optim.GlobalOptimManager.get_instance()
+
+                    skipped = 0
+                    for module in opt_model.modules():
+                        if isinstance(module, nn.Embedding):
+                            skipped += sum({p.data_ptr(): p.numel() for p in module.parameters()}.values())
+                            logger.info(f"skipped {module}: {skipped/2**20}M params")
+                            manager.register_module_override(module, "weight", {"optim_bits": 32})
+                            logger.debug(f"bitsandbytes: will optimize {module} in fp32")
+                    logger.info(f"skipped: {skipped/2**20}M params")
+
+        if is_sagemaker_mp_enabled():
+            self.optimizer = smp.DistributedOptimizer(self.optimizer)
+
+        return self.optimizer
+
+        
+        
 
 
-    #     self.model.eval()
-    #     #### testing  #######
-    #     test_pred = []
-    #     test_true = [] 
-    #     with torch.no_grad():
-    #         for batch in eval_dataloader:
-    #             input_ids = batch['input_ids']
-    #             attention_mask = batch['attention_mask']
-    #             labels = batch['labels'].cpu()
-
-    #             y_pred = self.model(**batch).logits
-    #             y_pred = F.softmax(y_pred, dim=1)
-    #             test_pred.append(y_pred[:,1].cpu().detach().numpy())
-    #             test_true.append(labels.numpy())
-
-    #     test_true = np.concatenate(test_true)
-    #     test_pred = np.concatenate(test_pred)
-    #     val_auc =  roc_auc_score(test_true, test_pred) 
-    #     print(f'current auc: {val_auc}')
-
-    #     return val_auc
 
 
 
@@ -818,15 +1016,18 @@ def main(args,logger):
     tokenized_datasets = tokenized_datasets.rename_column("label", "labels")
     t = tokenized_datasets['train'][0]
     
-    
+    ini_prompt = "What is the sentiment of this sentence? \n Positive , Negative."
+    org_input = tokenizer(ini_prompt
+                          , return_tensors='pt')
+    num_virtual_tokens = len(org_input['input_ids'][0])
 
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer, padding="longest")
 
     peft_config = PromptTuningConfig(
     task_type=TaskType.SEQ_CLS,
-    prompt_tuning_init=PromptTuningInit.TEXT,
-    num_virtual_tokens=20,
-    prompt_tuning_init_text="What is the sentiment of this sentence? \n Positive , Negative.",
+    prompt_tuning_init=PromptTuningInit.TEXT, #.TEXT
+    num_virtual_tokens=1,
+    prompt_tuning_init_text=ini_prompt,
     tokenizer_name_or_path=model_name_or_path,
 )
 
@@ -844,6 +1045,8 @@ def main(args,logger):
 
    
    # Train 
+    
+
     training_args = TrainingArguments(
         output_dir="your-name/gpt2-peft-p-tuning",
         learning_rate=1e-3, 
@@ -854,7 +1057,7 @@ def main(args,logger):
         evaluation_strategy="steps",
         save_strategy="steps",
         load_best_model_at_end=True,
-        lr_scheduler_type="constant"
+        optim="adamw_minimax"
     )
 
 
@@ -869,7 +1072,19 @@ def main(args,logger):
         p=positive,
         callbacks=[PrintStepCallback()]
     )
-
+    L2_norm_square = 0
+    # L2_norm_sq_grad = 0
+    for _, p in model.named_parameters():
+            # p0 = p
+            if p.requires_grad:
+                # a = p.grad
+                param_norm = p.data.norm(2)
+                # param_norm_grad = p.grad.data.norm(2)
+                L2_norm_square += param_norm.item() ** 2
+                # L2_norm_square_sq_grad += param_norm_grad.item() ** 2
+                break
+    print("L2_norm_square %s before train"% L2_norm_square) 
+    # print("L2_norm_sq_grad %s before train"% L2_norm_sq_grad)
     eval = trainer.evaluate(eval_dataset=tokenized_datasets["validation"])
     print("AUC of projected soft prompt before train\n %s"% eval)
 

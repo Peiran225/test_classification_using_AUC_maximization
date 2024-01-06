@@ -1,5 +1,5 @@
 {
-  "best_metric": 0.4020490050315857,
+  "best_metric": 145.77023315429688,
   "best_model_checkpoint": "your-name/gpt2-peft-p-tuning/checkpoint-500",
   "epoch": 0.2375296912114014,
   "eval_steps": 500,
@@ -11,16 +11,16 @@
     {
       "epoch": 0.24,
       "learning_rate": 0.001,
-      "loss": 0.3451,
+      "loss": 119.9666,
       "step": 500
     },
     {
       "epoch": 0.24,
-      "eval_loss": 0.4020490050315857,
-      "eval_roc_auc": 0.45572850888271443,
-      "eval_runtime": 2.1058,
-      "eval_samples_per_second": 414.097,
-      "eval_steps_per_second": 13.297,
+      "eval_loss": 145.77023315429688,
+      "eval_roc_auc": 0.5011261261261262,
+      "eval_runtime": 1.7137,
+      "eval_samples_per_second": 508.853,
+      "eval_steps_per_second": 16.339,
       "step": 500
     }
   ],

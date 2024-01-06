@@ -17,8 +17,8 @@ class AUCLOSS(nn.Module):
 		auc_loss = (1 - self.p) * torch.mean((y_pred - self.a)**2 * (1 == y_true).float()) + self.p * torch.mean((y_pred - self.b)**2 * (0 == y_true).float()) + \
 		2 * (1+ self.w) * ( torch.mean((self.p * y_pred * (0 == y_true).float() - (1 - self.p) * y_pred * (1==y_true).float()))) - self.p * (1 - self.p) * self.w**2
 		return auc_loss
-	def zero_grad(self):
-		self.model.zero_grad()
-		self.a.grad = None
-		self.b.grad = None
-		self.w.grad = None
+	# def zero_grad(self):
+	# 	self.model.zero_grad()
+	# 	self.a.grad = None
+	# 	self.b.grad = None
+	# 	self.w.grad = None
