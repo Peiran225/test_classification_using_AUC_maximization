@@ -111,10 +111,11 @@ from sklearn.metrics import roc_auc_score
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampler
 from transformers import TrainerCallback
+from transformers.optimization import get_scheduler
 
 from utils_AUC import AUCLOSS
 import torch.nn.functional as F
-from adamw_minimax import adamw_minimax
+from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS
 
 class PrintStepCallback(TrainerCallback):
     def on_step_end(self, args, state, control, **kwargs):
@@ -150,15 +151,14 @@ def p_of_positive(dataset):
 
 
 class AUCTrainer(Trainer):
-    def __init__(self, *args, p=1 / (1 + 0.2), lambda_reg=1, lr=10, lr2=10, **kwargs):
+    def __init__(self, *args, p=1 / (1 + 0.2), lambda_reg=1e-4, **kwargs):
         super().__init__(*args, **kwargs)
         self.p = p  # Store the value of 'p'
         self.lambda_reg = lambda_reg  # Regularization constant
         self.a = torch.nn.Parameter(torch.ones(1))# .rand(1))  # Trainable parameter 'a'
         self.b = torch.nn.Parameter(torch.zeros(1)) 
         self.w = torch.nn.Parameter(torch.rand(1))
-        self.lr = lr
-        self.lr2 = lr2
+        self.AUC_optim = "adamw_minimax"
         
         
 
@@ -191,7 +191,7 @@ class AUCTrainer(Trainer):
             if p.requires_grad:
                 param_norm = p.data.norm(2)
                 L2_norm_square += param_norm.item() ** 2
-        print("params_L2_norm_square %s in compute_loss function "% L2_norm_square) 
+        # print("params_L2_norm_square %s in compute_loss function "% L2_norm_square) 
 
         loss = auc_loss +  self.lambda_reg*L2_norm_square
         return (loss, outputs) if return_outputs else loss
@@ -895,8 +895,8 @@ class AUCTrainer(Trainer):
                     ],
                     "weight_decay": self.args.weight_decay,
                     "lr": self.args.learning_rate,
-                    "betas": (args.adam_beta1, args.adam_beta2),
-                    "eps": args.adam_epsilon,
+                    "betas": (self.args.adam_beta1, self.args.adam_beta2),
+                    "eps": self.args.adam_epsilon,
                 },
                 {
                     "params": [
@@ -904,8 +904,8 @@ class AUCTrainer(Trainer):
                     ],
                     "weight_decay": 0.0,
                     "lr": self.args.learning_rate,
-                    "betas": (args.adam_beta1, args.adam_beta2),
-                    "eps": args.adam_epsilon,
+                    "betas": (self.args.adam_beta1, self.args.adam_beta2),
+                    "eps": self.args.adam_epsilon,
                 },
                 {
                     "params": [
@@ -913,8 +913,8 @@ class AUCTrainer(Trainer):
                     ],
                     "weight_decay": self.args.weight_decay,
                     "lr": self.args.learning_rate,
-                    "betas": (args.adam_beta1, args.adam_beta2),
-                    "eps": args.adam_epsilon,
+                    "betas": (self.args.adam_beta1, self.args.adam_beta2),
+                    "eps": self.args.adam_epsilon,
                 },
                 {
                     "params": [
@@ -922,8 +922,8 @@ class AUCTrainer(Trainer):
                     ],
                     "weight_decay": self.args.weight_decay,
                     "lr":  - self.args.learning_rate,
-                    "betas": (args.adam_beta1, args.adam_beta2),
-                    "eps": args.adam_epsilon,
+                    "betas": (self.args.adam_beta1, self.args.adam_beta2),
+                    "eps": self.args.adam_epsilon,
                 },
             ]
 
@@ -935,7 +935,7 @@ class AUCTrainer(Trainer):
                     optim=optimizer_cls,
                     **optimizer_kwargs,
                 )
-            elif self.args.optim == "adamw_minimax":
+            elif self.AUC_optim == "adamw_minimax":
                 self.optimizer = optimizer_cls(optimizer_grouped_parameters)
             else:
                 self.optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
@@ -1026,7 +1026,7 @@ def main(args,logger):
     peft_config = PromptTuningConfig(
     task_type=TaskType.SEQ_CLS,
     prompt_tuning_init=PromptTuningInit.TEXT, #.TEXT
-    num_virtual_tokens=1,
+    num_virtual_tokens=num_virtual_tokens,
     prompt_tuning_init_text=ini_prompt,
     tokenizer_name_or_path=model_name_or_path,
 )
@@ -1049,15 +1049,14 @@ def main(args,logger):
 
     training_args = TrainingArguments(
         output_dir="your-name/gpt2-peft-p-tuning",
-        learning_rate=1e-3, 
+        learning_rate=1e-3, #1e-3
         per_device_train_batch_size=32,
         per_device_eval_batch_size=32,
-        num_train_epochs=1,
+        num_train_epochs=5,
         weight_decay=0.01, 
         evaluation_strategy="steps",
         save_strategy="steps",
-        load_best_model_at_end=True,
-        optim="adamw_minimax"
+        load_best_model_at_end=True
     )
 
 
@@ -1086,9 +1085,11 @@ def main(args,logger):
     print("L2_norm_square %s before train"% L2_norm_square) 
     # print("L2_norm_sq_grad %s before train"% L2_norm_sq_grad)
     eval = trainer.evaluate(eval_dataset=tokenized_datasets["validation"])
-    print("AUC of projected soft prompt before train\n %s"% eval)
+    print("AUC before train\n %s"% eval)
 
     trainer.train()
+    eval = trainer.evaluate(eval_dataset=tokenized_datasets["validation"])
+    print("AUC after train\n %s"% eval)
     
     
 
