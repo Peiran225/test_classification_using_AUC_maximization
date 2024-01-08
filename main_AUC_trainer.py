@@ -117,9 +117,9 @@ from utils_AUC import AUCLOSS
 import torch.nn.functional as F
 from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS
 
-class PrintStepCallback(TrainerCallback):
-    def on_step_end(self, args, state, control, **kwargs):
-        print(f"Current step number: {state.global_step}")
+# class PrintStepCallback(TrainerCallback):
+#     def on_step_end(self, args, state, control, **kwargs):
+#         print(f"Current step number: {state.global_step}")
 
 if is_accelerate_available():
     from accelerate import Accelerator, skip_first_batches
@@ -558,16 +558,16 @@ class AUCTrainer(Trainer):
                         # Update
                         
                         total_norm = 0
-                        for _, p in model.named_parameters():
-                            if p.requires_grad:
-                                # p.data.add_(p.grad.data, alpha= - self.lr)
-                                a = p
-                                param_norm = p.grad.data.norm(2)
-                                total_norm += param_norm.item() ** 2
+                        # for _, p in model.named_parameters():
+                        #     if p.requires_grad:
+                        #         # p.data.add_(p.grad.data, alpha= - self.lr)
+                        #         a = p
+                        #         param_norm = p.grad.data.norm(2)
+                        #         total_norm += param_norm.item() ** 2
                                 
 
-                        # print("Total params gradient norm square: %s, a norm %s, b norm %s,  w norm %s"% (total_norm,self.a.grad.data.norm(2),self.b.grad.data.norm(2),self.w.grad.data.norm(2)))
-                        print("Total params gradient norm square: %s"% total_norm)
+                        # # print("Total params gradient norm square: %s, a norm %s, b norm %s,  w norm %s"% (total_norm,self.a.grad.data.norm(2),self.b.grad.data.norm(2),self.w.grad.data.norm(2)))
+                        # print("Total params gradient norm square: %s"% total_norm)
 
                         # # Separate the alpha parameter
                         # alpha_param = [p for p in model.parameters() if p.requires_grad and p is model.alpha]
@@ -911,7 +911,7 @@ class AUCTrainer(Trainer):
                     "params": [
                         self.a, self.b
                     ],
-                    "weight_decay": self.args.weight_decay,
+                    "weight_decay": 0.0,
                     "lr": self.args.learning_rate,
                     "betas": (self.args.adam_beta1, self.args.adam_beta2),
                     "eps": self.args.adam_epsilon,
@@ -920,7 +920,7 @@ class AUCTrainer(Trainer):
                     "params": [
                         self.w
                     ],
-                    "weight_decay": self.args.weight_decay,
+                    "weight_decay": 0.0,
                     "lr":  - self.args.learning_rate,
                     "betas": (self.args.adam_beta1, self.args.adam_beta2),
                     "eps": self.args.adam_epsilon,
@@ -965,11 +965,12 @@ class AUCTrainer(Trainer):
 
 
 
-def main(args,logger):
+def main(args):
 
 
     model_name_or_path = "gpt2"
     dataset = load_dataset("sst2")
+    
     positive = p_of_positive(dataset)
 
     metric = evaluate.load('roc_auc') #("accuracy")
@@ -1016,7 +1017,7 @@ def main(args,logger):
     tokenized_datasets = tokenized_datasets.rename_column("label", "labels")
     t = tokenized_datasets['train'][0]
     
-    ini_prompt = "What is the sentiment of this sentence? \n Positive , Negative."
+    ini_prompt = "classify the sentiment type of this"
     org_input = tokenizer(ini_prompt
                           , return_tensors='pt')
     num_virtual_tokens = len(org_input['input_ids'][0])
@@ -1025,9 +1026,9 @@ def main(args,logger):
 
     peft_config = PromptTuningConfig(
     task_type=TaskType.SEQ_CLS,
-    prompt_tuning_init=PromptTuningInit.TEXT, #.TEXT
-    num_virtual_tokens=num_virtual_tokens,
-    prompt_tuning_init_text=ini_prompt,
+    prompt_tuning_init=PromptTuningInit.RANDOM, #.TEXT
+    num_virtual_tokens=args.num_virtual_tokens,
+    # prompt_tuning_init_text=ini_prompt,
     tokenizer_name_or_path=model_name_or_path,
 )
 
@@ -1048,15 +1049,16 @@ def main(args,logger):
     
 
     training_args = TrainingArguments(
-        output_dir="your-name/gpt2-peft-p-tuning",
-        learning_rate=1e-3, #1e-3
-        per_device_train_batch_size=32,
-        per_device_eval_batch_size=32,
-        num_train_epochs=5,
-        weight_decay=0.01, 
+        output_dir="your-name/gpt2-peft-prompt-tuning",
+        learning_rate=args.learning_rate, #1e-3
+        per_device_train_batch_size=args.per_device_train_batch_size,
+        per_device_eval_batch_size=args.per_device_eval_batch_size,
+        num_train_epochs=args.num_train_epochs,
+        weight_decay=args.weight_decay, #originally 0.01
         evaluation_strategy="steps",
         save_strategy="steps",
-        load_best_model_at_end=True
+        load_best_model_at_end=True#,
+        # lr_scheduler_type = "constant"
     )
 
 
@@ -1069,27 +1071,27 @@ def main(args,logger):
         data_collator=data_collator,
         compute_metrics=compute_metrics,
         p=positive,
-        callbacks=[PrintStepCallback()]
+        # callbacks=[PrintStepCallback()]
     )
-    L2_norm_square = 0
+    # L2_norm_square = 0
     # L2_norm_sq_grad = 0
-    for _, p in model.named_parameters():
-            # p0 = p
-            if p.requires_grad:
-                # a = p.grad
-                param_norm = p.data.norm(2)
-                # param_norm_grad = p.grad.data.norm(2)
-                L2_norm_square += param_norm.item() ** 2
-                # L2_norm_square_sq_grad += param_norm_grad.item() ** 2
-                break
-    print("L2_norm_square %s before train"% L2_norm_square) 
+    # for _, p in model.named_parameters():
+    #         # p0 = p
+    #         if p.requires_grad:
+    #             # a = p.grad
+    #             param_norm = p.data.norm(2)
+    #             # param_norm_grad = p.grad.data.norm(2)
+    #             L2_norm_square += param_norm.item() ** 2
+    #             # L2_norm_square_sq_grad += param_norm_grad.item() ** 2
+    #             break
+    # print("L2_norm_square %s before train"% L2_norm_square) 
     # print("L2_norm_sq_grad %s before train"% L2_norm_sq_grad)
     eval = trainer.evaluate(eval_dataset=tokenized_datasets["validation"])
-    print("AUC before train\n %s"% eval)
+    print("balanced data AUC before train\n %s"% eval)
 
     trainer.train()
     eval = trainer.evaluate(eval_dataset=tokenized_datasets["validation"])
-    print("AUC after train\n %s"% eval)
+    print("balanced data AUC after train\n %s"% eval)
     
     
 
@@ -1097,10 +1099,19 @@ def main(args,logger):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--similarity", type=str, default = None)
-    parser.add_argument("--log_file", default=None, type=str)
     
+    parser.add_argument("--log_file", default=None, type=str)
+    parser.add_argument("--log_file", default=None, type=str)
+    parser.add_argument("--num_virtual_tokens", default=6, type=int)
+    parser.add_argument("--learning_rate", default=1e-3, type=float)
+    parser.add_argument("--weight_decay", default=1e-2, type=float)
+    parser.add_argument("--per_device_train_batch_size", default=32, type=int)
+    parser.add_argument("--per_device_eval_batch_size", default=32, type=int)
+    parser.add_argument("--num_train_epochs", default=5, type=int)
+    parser.add_argument("--warmup_ratio", default=0.1, type=float)
+
     args = parser.parse_args()
+    args.warmup_ratio = 0.1
     
 
     handlers = [logging.StreamHandler()]
@@ -1112,7 +1123,7 @@ if __name__ == '__main__':
                         handlers=handlers)
     logger = logging.getLogger(__name__)
     logger.info(args)
-
+    print(args) 
     main(args,logger)
 
 

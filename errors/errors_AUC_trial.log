@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/fs/nexus-scratch/peiran/test_classification_using_AUC_maximization/main_AUC_trainer.py", line 1104, in <module>
+    parser.add_argument("--log_file", default=None, type=str)
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/argparse.py", line 1468, in add_argument
+    return self._add_action(action)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/argparse.py", line 1850, in _add_action
+    self._optionals._add_action(action)
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/argparse.py", line 1670, in _add_action
+    action = super(_ArgumentGroup, self)._add_action(action)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/argparse.py", line 1482, in _add_action
+    self._check_conflict(action)
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/argparse.py", line 1619, in _check_conflict
+    conflict_handler(action, confl_optionals)
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/argparse.py", line 1628, in _handle_conflict_error
+    raise ArgumentError(action, message % conflict_string)
+argparse.ArgumentError: argument --log_file: conflicting option string: --log_file

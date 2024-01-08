@@ -1,0 +1,66 @@
+01/06/2024 17:08:31 - INFO - __main__ - Namespace(similarity=None, log_file=None)
+Map:   0%|          | 0/1821 [00:00<?, ? examples/s]Map: 100%|██████████| 1821/1821 [00:00<00:00, 11947.64 examples/s]Map: 100%|██████████| 1821/1821 [00:00<00:00, 11051.31 examples/s]
+/fs/nexus-scratch/peiran/test_classification_using_AUC_maximization/main_baseline.py:1015: DeprecationWarning: Calling nonzero on 0d arrays is deprecated, as it behaves surprisingly. Use `atleast_1d(cond).nonzero()` if the old behavior was intended. If the context of this warning is of the form `arr[nonzero(cond)]`, just use `arr[cond]`.
+  indices_label_0 = np.where(labels_tr == 0)[0]
+Some weights of GPT2ForSequenceClassification were not initialized from the model checkpoint at gpt2 and are newly initialized: ['score.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+01/06/2024 17:08:37 - WARNING - accelerate.utils.other - Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+You're using a GPT2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+  0%|          | 0/28 [00:00<?, ?it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 11%|█         | 3/28 [00:00<00:01, 24.03it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 21%|██▏       | 6/28 [00:00<00:01, 18.52it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 29%|██▊       | 8/28 [00:00<00:01, 17.54it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 36%|███▌      | 10/28 [00:00<00:01, 16.99it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 43%|████▎     | 12/28 [00:00<00:00, 16.67it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 50%|█████     | 14/28 [00:00<00:00, 16.46it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 57%|█████▋    | 16/28 [00:00<00:00, 16.31it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 64%|██████▍   | 18/28 [00:01<00:00, 16.19it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 71%|███████▏  | 20/28 [00:01<00:00, 16.10it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 79%|███████▊  | 22/28 [00:01<00:00, 16.06it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 86%|████████▌ | 24/28 [00:01<00:00, 16.03it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 93%|█████████▎| 26/28 [00:01<00:00, 16.02it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+100%|██████████| 28/28 [00:01<00:00, 16.86it/s]
+  0%|          | 0/2105 [00:00<?, ?it/s]Traceback (most recent call last):
+  File "/fs/nexus-scratch/peiran/test_classification_using_AUC_maximization/main_baseline.py", line 1140, in <module>
+    main(args,logger)
+  File "/fs/nexus-scratch/peiran/test_classification_using_AUC_maximization/main_baseline.py", line 1095, in main
+    trainer.train()
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/site-packages/transformers/trainer.py", line 1553, in train
+    return inner_training_loop(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/site-packages/transformers/trainer.py", line 1813, in _inner_training_loop
+    for step, inputs in enumerate(epoch_iterator):
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/site-packages/accelerate/data_loader.py", line 451, in __iter__
+    current_batch = next(dataloader_iter)
+                    ^^^^^^^^^^^^^^^^^^^^^
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/site-packages/torch/utils/data/dataloader.py", line 633, in __next__
+    data = self._next_data()
+           ^^^^^^^^^^^^^^^^^
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/site-packages/torch/utils/data/dataloader.py", line 677, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/site-packages/torch/utils/data/_utils/fetch.py", line 54, in fetch
+    return self.collate_fn(data)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/site-packages/transformers/data/data_collator.py", line 249, in __call__
+    batch = self.tokenizer.pad(
+            ^^^^^^^^^^^^^^^^^^^
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/site-packages/transformers/tokenization_utils_base.py", line 3018, in pad
+    raise ValueError(
+ValueError: You should supply an encoding or a list of encodings to this method that includes input_ids, but you provided ['label']
+  0%|          | 0/2105 [00:00<?, ?it/s]
