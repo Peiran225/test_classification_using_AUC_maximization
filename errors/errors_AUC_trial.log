@@ -1,18 +1,13 @@
+01/11/2024 17:26:10 - INFO - __main__ - Namespace(log_file=None, num_virtual_tokens=5, learning_rate_1=0.001, learning_rate_2=0.001, weight_decay=0.01, per_device_train_batch_size=32, per_device_eval_batch_size=32, num_train_epochs=5, warmup_ratio=0.1, scheduler_type='linear')
+Some weights of GPT2ForSequenceClassification were not initialized from the model checkpoint at gpt2 and are newly initialized: ['score.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
 Traceback (most recent call last):
-  File "/fs/nexus-scratch/peiran/test_classification_using_AUC_maximization/main_AUC_trainer.py", line 1104, in <module>
-    parser.add_argument("--log_file", default=None, type=str)
-  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/argparse.py", line 1468, in add_argument
-    return self._add_action(action)
-           ^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/argparse.py", line 1850, in _add_action
-    self._optionals._add_action(action)
-  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/argparse.py", line 1670, in _add_action
-    action = super(_ArgumentGroup, self)._add_action(action)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/argparse.py", line 1482, in _add_action
-    self._check_conflict(action)
-  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/argparse.py", line 1619, in _check_conflict
-    conflict_handler(action, confl_optionals)
-  File "/fs/nexus-scratch/peiran/anaconda3/envs/c-prompting/lib/python3.11/argparse.py", line 1628, in _handle_conflict_error
-    raise ArgumentError(action, message % conflict_string)
-argparse.ArgumentError: argument --log_file: conflicting option string: --log_file
+  File "/nfshomes/qhe123/0108/main_AUC_trainer.py", line 1151, in <module>
+    main(args)
+  File "/nfshomes/qhe123/0108/main_AUC_trainer.py", line 1057, in main
+    training_args = TrainingArguments(
+                    ^^^^^^^^^^^^^^^^^^
+  File "<string>", line 114, in __init__
+  File "/nfshomes/qhe123/miniconda3/envs/c-prompting/lib/python3.11/site-packages/transformers/training_args.py", line 1318, in __post_init__
+    raise ValueError(
+ValueError: --load_best_model_at_end requires the saving steps to be a round multiple of the evaluation steps, but found 10, which is not a round multiple of 500.

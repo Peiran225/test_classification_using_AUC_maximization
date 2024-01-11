@@ -1,0 +1,11 @@
+01/08/2024 14:54:15 - INFO - __main__ - Namespace(log_file='outputs/trial.log', num_virtual_tokens=6, learning_rate=0.001, weight_decay=0.01, per_device_train_batch_size=32, per_device_eval_batch_size=32, num_train_epochs=5, warmup_ratio=0.1)
+01/08/2024 14:54:20 - WARNING - accelerate.utils.other - Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+01/08/2024 14:54:22 - INFO - __main__ - ***** Running training *****
+01/08/2024 14:54:22 - INFO - __main__ -   Num examples = 67,349
+01/08/2024 14:54:22 - INFO - __main__ -   Num Epochs = 5
+01/08/2024 14:54:22 - INFO - __main__ -   Instantaneous batch size per device = 32
+01/08/2024 14:54:22 - INFO - __main__ -   Total train batch size (w. parallel, distributed & accumulation) = 32
+01/08/2024 14:54:22 - INFO - __main__ -   Gradient Accumulation steps = 1
+01/08/2024 14:54:22 - INFO - __main__ -   Total optimization steps = 10,525
+01/08/2024 14:54:22 - INFO - __main__ -   Number of trainable parameters = 6,144
+01/08/2024 14:58:55 - INFO - __main__ - Namespace(log_file='outputs/trial.log', num_virtual_tokens=6, learning_rate_1=0.001, learning_rate_2=0.001, weight_decay=0.01, per_device_train_batch_size=32, per_device_eval_batch_size=32, num_train_epochs=5, warmup_ratio=0.1)

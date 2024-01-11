@@ -6,7 +6,7 @@
 #SBATCH --nodes=1                 # Number of nodes to request
 #SBATCH --ntasks-per-node=1       # Number of tasks (CPUs) to request
 #SBATCH --cpus-per-task=1         # Number of CPU cores per task
-#SBATCH --time=01:00:00           # Maximum execution time (HH:MM:SS)
+#SBATCH --time=10:00:00           # Maximum execution time (HH:MM:SS)
 #SBATCH --qos=default
 #SBATCH --gres=gpu:rtxa4000:1
 #SBATCH --mem=32G                  # Memory per node (4GB in this example)

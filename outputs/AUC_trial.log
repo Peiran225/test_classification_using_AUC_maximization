@@ -1,0 +1,5 @@
+scheduler type constant
+Proportion of positive examples: 0.16794724930848537
+pad token id is none
+finishing tokeninzing
+trainable params: 5,376 || all params: 124,446,720 || trainable%: 0.004319921007158726
