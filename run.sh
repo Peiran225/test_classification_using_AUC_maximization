@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=AUC_prompting_job  # Specify a name for your job
-#SBATCH --output=outputs/AUC_trial.log       # AUC_converge.log  Specify the output log file
-#SBATCH --error=errors/errors_AUC_trial.log # AUC_p_tuning_main_errors.log         # Specify the error log file
+#SBATCH --job-name=minimax  # Specify a name for your job
+#SBATCH --output=outputs/AUC_trial_minimax.log       # AUC_converge.log  Specify the output log file
+#SBATCH --error=errors/errors_AUC_minimax.log # AUC_p_tuning_main_errors.log         # Specify the error log file
 # Specify the partition (queue) you want to use
 #SBATCH --nodes=1                 # Number of nodes to request
 #SBATCH --ntasks-per-node=1       # Number of tasks (CPUs) to request
 #SBATCH --cpus-per-task=1         # Number of CPU cores per task
-#SBATCH --time=01:00:00           # Maximum execution time (HH:MM:SS)
+#SBATCH --time=24:00:00           # Maximum execution time (HH:MM:SS)
 #SBATCH --qos=default
 #SBATCH --gres=gpu:rtxa4000:1
 #SBATCH --mem=32G                  # Memory per node (4GB in this example)
@@ -28,3 +28,7 @@ python3 main_AUC_trainer.py
 
 # Your job is done!
 
+# lower lr plot the training loss, see the curve, 
+# plot: wandb = weights and bias 
+# training loss, each batch 
+# pretrain the discraminator

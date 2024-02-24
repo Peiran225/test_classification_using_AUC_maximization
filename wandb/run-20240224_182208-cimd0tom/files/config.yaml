@@ -1,0 +1,48 @@
+wandb_version: 1
+
+model:
+  desc: null
+  value: gpt2
+learning_rate:
+  desc: null
+  value: 1.0e-06
+dataset:
+  desc: null
+  value: SST2
+epochs:
+  desc: null
+  value: 1
+positive_rate:
+  desc: null
+  value: 0.0001
+_wandb:
+  desc: null
+  value:
+    python_version: 3.11.5
+    cli_version: 0.16.3
+    framework: huggingface
+    huggingface_version: 4.33.2
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1708816928.883223
+    t:
+      1:
+      - 1
+      - 5
+      - 11
+      - 49
+      - 51
+      - 53
+      - 55
+      - 71
+      - 98
+      - 100
+      3:
+      - 16
+      - 23
+      4: 3.11.5
+      5: 0.16.3
+      6: 4.33.2
+      8:
+      - 5
+      13: linux-x86_64

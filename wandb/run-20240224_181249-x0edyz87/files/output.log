@@ -1,0 +1,55 @@
+Proportion of positive examples: 0.00010072860356579256
+pad token id is none
+finishing tokeninzing
+Some weights of GPT2ForSequenceClassification were not initialized from the model checkpoint at gpt2 and are newly initialized: ['score.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+02/24/2024 18:12:57 - WARNING - accelerate.utils.other - Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+You're using a GPT2TokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+  0%|          | 0/28 [00:00<?, ?it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 11%|█         | 3/28 [00:00<00:01, 21.17it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 21%|██▏       | 6/28 [00:00<00:01, 16.30it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 29%|██▊       | 8/28 [00:00<00:01, 15.43it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 36%|███▌      | 10/28 [00:00<00:01, 14.93it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 43%|████▎     | 12/28 [00:00<00:01, 14.64it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+trainable params: 12,288 || all params: 124,453,632 || trainable%: 0.009873556763694932
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 50%|█████     | 14/28 [00:00<00:00, 14.30it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 57%|█████▋    | 16/28 [00:01<00:00, 14.24it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 64%|██████▍   | 18/28 [00:01<00:00, 14.16it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 71%|███████▏  | 20/28 [00:01<00:00, 14.12it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 79%|███████▊  | 22/28 [00:01<00:00, 14.06it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 86%|████████▌ | 24/28 [00:01<00:00, 14.05it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+ 93%|█████████▎| 26/28 [00:01<00:00, 14.03it/s]GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+GPT2ForSequenceClassification will not detect padding tokens in `inputs_embeds`. Results may be unexpected if using padding tokens in conjunction with `inputs_embeds.`
+100%|██████████| 28/28 [00:01<00:00, 14.77it/s]
+Traceback (most recent call last):
+  File "/fs/nexus-scratch/peiran/test_classification_using_AUC_maximization/main_AUC_trainer.py", line 1152, in <module>
+    main(args)
+  File "/fs/nexus-scratch/peiran/test_classification_using_AUC_maximization/main_AUC_trainer.py", line 1116, in main
+    trainer.train()
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/prompting/lib/python3.11/site-packages/transformers/trainer.py", line 1553, in train
+    return inner_training_loop(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/fs/nexus-scratch/peiran/test_classification_using_AUC_maximization/main_AUC_trainer.py", line 280, in _inner_training_loop
+    self.create_optimizer_and_scheduler(num_training_steps=max_steps)
+  File "/fs/nexus-scratch/peiran/anaconda3/envs/prompting/lib/python3.11/site-packages/transformers/trainer.py", line 941, in create_optimizer_and_scheduler
+    self.create_optimizer()
+  File "/fs/nexus-scratch/peiran/test_classification_using_AUC_maximization/main_AUC_trainer.py", line 939, in create_optimizer
+    optimizer_cls, optimizer_kwargs = self.get_optimizer_cls_and_kwargs(self.args)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: AUCTrainer.get_optimizer_cls_and_kwargs() takes 1 positional argument but 2 were given
+balanced data AUC before train
+ {'eval_loss': -1.907277226448059, 'eval_roc_auc': 0.506217373915972, 'eval_runtime': 2.2515, 'eval_samples_per_second': 387.293, 'eval_steps_per_second': 12.436}

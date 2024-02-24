@@ -1,0 +1,40 @@
+pad token id is none
+finishing tokeninzing
+train the model when the hook layer is -1
+trainable params: 12,288 || all params: 124,453,632 || trainable%: 0.009873556763694932
+Accuracy of projected soft prompt before train
+ {'eval_loss': 2.8873133659362793, 'eval_accuracy': 0.4908256880733945, 'eval_runtime': 1.3688, 'eval_samples_per_second': 637.049, 'eval_steps_per_second': 20.456}
+{'loss': 0.6149, 'learning_rate': 0.0007624703087885985, 'epoch': 0.24}
+{'loss': 0.4976, 'learning_rate': 0.0005249406175771972, 'epoch': 0.48}
+{'loss': 0.4509, 'learning_rate': 0.00028741092636579575, 'epoch': 0.71}
+{'loss': 0.4354, 'learning_rate': 4.98812351543943e-05, 'epoch': 0.95}
+{'eval_loss': 0.37036335468292236, 'eval_accuracy': 0.838302752293578, 'eval_runtime': 1.1186, 'eval_samples_per_second': 779.519, 'eval_steps_per_second': 25.03, 'epoch': 1.0}
+{'eval_loss': 0.37036335468292236, 'eval_accuracy': 0.838302752293578, 'eval_runtime': 1.1186, 'eval_samples_per_second': 779.519, 'eval_steps_per_second': 25.03, 'epoch': 1.0}
+{'train_runtime': 191.286, 'train_samples_per_second': 352.085, 'train_steps_per_second': 11.004, 'train_loss': 0.4962266844978242, 'epoch': 1.0}
+train the model when the hook layer is 4
+training with penalized model
+trainable params: 12,288 || all params: 124,453,632 || trainable%: 0.009873556763694932
+{'loss': 0.641, 'learning_rate': 0.0007624703087885985, 'epoch': 0.24}
+{'loss': 0.5155, 'learning_rate': 0.0005249406175771972, 'epoch': 0.48}
+{'loss': 0.469, 'learning_rate': 0.00028741092636579575, 'epoch': 0.71}
+{'loss': 0.4478, 'learning_rate': 4.98812351543943e-05, 'epoch': 0.95}
+{'eval_loss': 0.38706207275390625, 'eval_accuracy': 0.838302752293578, 'eval_runtime': 1.1221, 'eval_samples_per_second': 777.098, 'eval_steps_per_second': 24.953, 'epoch': 1.0}
+metrics {'eval_loss': 0.38706207275390625, 'eval_accuracy': 0.838302752293578, 'eval_runtime': 1.1221, 'eval_samples_per_second': 777.098, 'eval_steps_per_second': 24.953, 'epoch': 1.0}
+{'train_runtime': 192.1123, 'train_samples_per_second': 350.571, 'train_steps_per_second': 10.957, 'train_loss': 0.51499723493345, 'epoch': 1.0}
+train the model when the hook layer is 4
+training with penalized model
+trainable params: 12,288 || all params: 124,453,632 || trainable%: 0.009873556763694932
+{'loss': 224.482, 'learning_rate': 0.0007624703087885985, 'epoch': 0.24}
+{'loss': 217.0083, 'learning_rate': 0.0005249406175771972, 'epoch': 0.48}
+{'loss': 219.7674, 'learning_rate': 0.00028741092636579575, 'epoch': 0.71}
+{'loss': 206.887, 'learning_rate': 4.98812351543943e-05, 'epoch': 0.95}
+{'eval_loss': 0.4979325532913208, 'eval_accuracy': 0.7912844036697247, 'eval_runtime': 1.1142, 'eval_samples_per_second': 782.651, 'eval_steps_per_second': 25.131, 'epoch': 1.0}
+{'eval_loss': 0.4979325532913208, 'eval_accuracy': 0.7912844036697247, 'eval_runtime': 1.1142, 'eval_samples_per_second': 782.651, 'eval_steps_per_second': 25.131, 'epoch': 1.0}
+{'train_runtime': 277.4843, 'train_samples_per_second': 242.713, 'train_steps_per_second': 7.586, 'train_loss': 216.62823448634205, 'epoch': 1.0}
+{'loss': 224.482, 'learning_rate': 0.0007624703087885985, 'epoch': 0.24}
+{'loss': 217.0083, 'learning_rate': 0.0005249406175771972, 'epoch': 0.48}
+{'loss': 219.7674, 'learning_rate': 0.00028741092636579575, 'epoch': 0.71}
+{'loss': 206.887, 'learning_rate': 4.98812351543943e-05, 'epoch': 0.95}
+{'eval_loss': 0.4979325532913208, 'eval_accuracy': 0.7912844036697247, 'eval_runtime': 1.1184, 'eval_samples_per_second': 779.712, 'eval_steps_per_second': 25.037, 'epoch': 1.0}
+metrics {'eval_loss': 0.4979325532913208, 'eval_accuracy': 0.7912844036697247, 'eval_runtime': 1.1184, 'eval_samples_per_second': 779.712, 'eval_steps_per_second': 25.037, 'epoch': 1.0}
+{'train_runtime': 278.4247, 'train_samples_per_second': 241.893, 'train_steps_per_second': 7.56, 'train_loss': 216.62823448634205, 'epoch': 1.0}

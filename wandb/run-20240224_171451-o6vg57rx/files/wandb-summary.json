@@ -1,0 +1,1 @@
+{"loss": -1.8475332260131836, "_timestamp": 1708812929.826466, "_runtime": 37.854588985443115, "_step": 28, "eval/loss": -1.8825782537460327, "eval/roc_auc": 0.5114401784962532, "eval/runtime": 5.651, "eval/samples_per_second": 154.31, "eval/steps_per_second": 4.955, "train/global_step": 0, "_wandb": {"runtime": 37}}

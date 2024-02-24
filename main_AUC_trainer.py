@@ -91,7 +91,7 @@ from peft import (
     TaskType,
 )
 from packaging import version
-from datasets import load_dataset
+from datasets import load_dataset, concatenate_datasets
 import evaluate
 import torch
 import torch.nn as nn
@@ -116,6 +116,10 @@ from transformers.optimization import get_scheduler
 from utils_AUC import AUCLOSS
 import torch.nn.functional as F
 from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS
+
+import wandb
+
+
 
 # class PrintStepCallback(TrainerCallback):
 #     def on_step_end(self, args, state, control, **kwargs):
@@ -151,7 +155,7 @@ def p_of_positive(dataset):
 
 
 class AUCTrainer(Trainer):
-    def __init__(self, *args, p=1 / (1 + 0.2), lambda_reg=1e-4, **kwargs):
+    def __init__(self, *args, p=1 / (1 + 0.2), lambda_reg=0, **kwargs):
         super().__init__(*args, **kwargs)
         self.p = p  # Store the value of 'p'
         self.lambda_reg = lambda_reg  # Regularization constant
@@ -194,6 +198,7 @@ class AUCTrainer(Trainer):
         # print("params_L2_norm_square %s in compute_loss function "% L2_norm_square) 
 
         loss = auc_loss +  self.lambda_reg*L2_norm_square
+        
         return (loss, outputs) if return_outputs else loss
     
     
@@ -601,12 +606,16 @@ class AUCTrainer(Trainer):
                         # Delay optimizer scheduling until metrics are generated
                         if not isinstance(self.lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
                             self.lr_scheduler.step()
+                            # if self.state.epoch > 0.45:
+                            #     for _ in range(0,200):
+                            #         self.lr_scheduler.step()
 
                     model.zero_grad()
                     self.state.global_step += 1
                     self.state.epoch = epoch + (step + 1 + steps_skipped) / steps_in_epoch
                     self.control = self.callback_handler.on_step_end(args, self.state, self.control)
 
+                    wandb.log({"tr_loss": tr_loss})  
                     self._maybe_log_save_evaluate(tr_loss, model, trial, epoch, ignore_keys_for_eval)
                 else:
                     self.control = self.callback_handler.on_substep_end(args, self.state, self.control)
@@ -769,16 +778,13 @@ class AUCTrainer(Trainer):
                 key, value = mapping.split("=")
                 optim_args[key] = value
 
-        optimizer_kwargs = {"lr": args.learning_rate}
+        optimizer_kwargs = {}
 
         adam_kwargs = {
             "betas": (args.adam_beta1, args.adam_beta2),
             "eps": args.adam_epsilon,
         }
-        if args.optim == "adamw_minimax":
-            optimizer_kwargs.update(adam_kwargs)
-            optimizer_cls = adamw_minimax
-        elif args.optim == OptimizerNames.ADAFACTOR:
+        if args.optim == OptimizerNames.ADAFACTOR:
             optimizer_cls = Adafactor
             optimizer_kwargs.update({"scale_parameter": False, "relative_step": False})
         elif args.optim == OptimizerNames.ADAMW_HF:
@@ -927,7 +933,7 @@ class AUCTrainer(Trainer):
                 },
             ]
 
-            optimizer_cls, optimizer_kwargs = Trainer.get_optimizer_cls_and_kwargs(self.args)
+            optimizer_cls, optimizer_kwargs = AUCTrainer.get_optimizer_cls_and_kwargs(self.args)
 
             if self.sharded_ddp == ShardedDDPOption.SIMPLE:
                 self.optimizer = OSS(
@@ -967,11 +973,26 @@ class AUCTrainer(Trainer):
 
 def main(args):
 
-
+    wandb.init(project='prompting_AUC', 
+           config={ "model": "gpt2",
+                    "learning_rate": args.learning_rate,
+                    "dataset": "SST2",
+                    "epochs": 1,
+                    "positive_rate": args.positive_rate
+                    })
+    
     model_name_or_path = "gpt2"
     dataset = load_dataset("sst2")
     
+    positive_samples = dataset['train'].filter(lambda example: example['label'] == 1)
+    negative_samples = dataset['train'].filter(lambda example: example['label'] == 0)
+    num_positive_to_keep = int(args.positive_rate * len(positive_samples))
+    reduced_positive_samples = positive_samples.shuffle(seed=42).select(range(num_positive_to_keep))
+    dataset['train'] = concatenate_datasets([negative_samples, reduced_positive_samples]).shuffle(seed=42)
+
     positive = p_of_positive(dataset)
+
+    
 
     metric = evaluate.load('roc_auc') #("accuracy")
     def compute_metrics(eval_pred):
@@ -1017,7 +1038,7 @@ def main(args):
     tokenized_datasets = tokenized_datasets.rename_column("label", "labels")
     t = tokenized_datasets['train'][0]
     
-    ini_prompt = "classify the sentiment type of this"
+    ini_prompt = "What is the sentiment of this sentence?\nPositive, Negative."
     org_input = tokenizer(ini_prompt
                           , return_tensors='pt')
     num_virtual_tokens = len(org_input['input_ids'][0])
@@ -1026,9 +1047,9 @@ def main(args):
 
     peft_config = PromptTuningConfig(
     task_type=TaskType.SEQ_CLS,
-    prompt_tuning_init=PromptTuningInit.RANDOM, #.TEXT
-    num_virtual_tokens=args.num_virtual_tokens,
-    # prompt_tuning_init_text=ini_prompt,
+    prompt_tuning_init=PromptTuningInit.TEXT, #.TEXT/RANDOM
+    num_virtual_tokens=num_virtual_tokens,
+    prompt_tuning_init_text=ini_prompt,
     tokenizer_name_or_path=model_name_or_path,
 )
 
@@ -1056,9 +1077,9 @@ def main(args):
         num_train_epochs=args.num_train_epochs,
         weight_decay=args.weight_decay, #originally 0.01
         evaluation_strategy="steps",
-        save_strategy="steps",
-        load_best_model_at_end=True#,
-        # lr_scheduler_type = "constant"
+        eval_steps=1,
+        load_best_model_at_end=True, #,
+        lr_scheduler_type = "constant"
     )
 
 
@@ -1101,17 +1122,18 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     
     parser.add_argument("--log_file", default=None, type=str)
-    parser.add_argument("--log_file", default=None, type=str)
     parser.add_argument("--num_virtual_tokens", default=6, type=int)
-    parser.add_argument("--learning_rate", default=1e-3, type=float)
+    parser.add_argument("--learning_rate", default=1e-6, type=float)
     parser.add_argument("--weight_decay", default=1e-2, type=float)
     parser.add_argument("--per_device_train_batch_size", default=32, type=int)
     parser.add_argument("--per_device_eval_batch_size", default=32, type=int)
-    parser.add_argument("--num_train_epochs", default=5, type=int)
-    parser.add_argument("--warmup_ratio", default=0.1, type=float)
+    parser.add_argument("--num_train_epochs", default=20, type=int)
+    parser.add_argument("--warmup_ratio", default=0, type=float)
+    parser.add_argument("--positive_rate", default=1e-4, type=float)
+
 
     args = parser.parse_args()
-    args.warmup_ratio = 0.1
+    # args.warmup_ratio = 0.1
     
 
     handlers = [logging.StreamHandler()]
@@ -1124,7 +1146,7 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
     logger.info(args)
     print(args) 
-    main(args,logger)
+    main(args)
 
 
 

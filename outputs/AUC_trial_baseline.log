@@ -1,0 +1,14 @@
+Proportion of positive examples: 0.16794724930848537
+pad token id is none
+finishing tokeninzing
+trainable params: 5,376 || all params: 124,446,720 || trainable%: 0.004319921007158726
+current lr1 0.001 lr2 0.1 weight decay 0.1
+balanced data AUC before train
+ {'eval_loss': 0.23105517029762268, 'eval_roc_auc': 0.5637629451881789, 'eval_runtime': 1.9921, 'eval_samples_per_second': 437.738, 'eval_steps_per_second': 14.056}
+{'loss': 0.093, 'learning_rate': 0.0005531724754244861, 'epoch': 0.45}
+{'eval_loss': 0.09112585335969925, 'eval_roc_auc': 0.5010366675086301, 'eval_runtime': 1.7626, 'eval_samples_per_second': 494.723, 'eval_steps_per_second': 15.886, 'epoch': 0.45}
+{'loss': 0.0814, 'learning_rate': 0.00010634495084897231, 'epoch': 0.89}
+{'eval_loss': 0.007256802637130022, 'eval_roc_auc': 0.5822124694788247, 'eval_runtime': 1.7727, 'eval_samples_per_second': 491.918, 'eval_steps_per_second': 15.796, 'epoch': 0.89}
+{'train_runtime': 158.0385, 'train_samples_per_second': 226.47, 'train_steps_per_second': 7.081, 'train_loss': 0.08652149725429067, 'epoch': 1.0}
+balanced data AUC after train
+ {'eval_loss': 0.007256802637130022, 'eval_roc_auc': 0.5822124694788247, 'eval_runtime': 1.769, 'eval_samples_per_second': 492.925, 'eval_steps_per_second': 15.828, 'epoch': 1.0}
